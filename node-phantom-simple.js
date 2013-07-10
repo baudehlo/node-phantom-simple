@@ -7,6 +7,33 @@ var util            = require('util');
 
 var POLL_INTERVAL   = process.env.POLL_INTERVAL || 500;
 
+var queue = function (worker) {
+    var _q = [];
+    var running = false;
+    var q = {
+        push: function (obj) {
+            _q.push(obj);
+            q.process();
+        },
+        process: function () {
+            if (_q.length !== 1) {
+                return;
+            }
+            if (running) {
+                return;
+            }
+            running = true;
+            var cb = function () {
+                running = false;
+                q.process();
+            }
+            var task = _q.shift();
+            worker(task, cb);
+        }
+    }
+    return q;
+}
+
 function callbackOrDummy (callback, poll_func) {
     if (!callback) return function () {};
     if (poll_func) {
@@ -114,7 +141,9 @@ exports.create = function (callback, options) {
 
         var poll_func = setup_long_poll(phantom, port, pages);
 
-        function request (params, callback) {
+        var request_queue = queue(function (paramarr, next) {
+            var params = paramarr[0];
+            var callback = paramarr[1];
             var page = params[0];
             var method = params[1];
             var args = params.slice(2);
@@ -152,13 +181,13 @@ exports.create = function (callback, options) {
                         ];
                         pages[id] = {
                             setFn: function (name, fn, cb) {
-                                request([id, 'setFunction', name, fn.toString()], callbackOrDummy(cb, poll_func));
+                                request_queue.push([[id, 'setFunction', name, fn.toString()], callbackOrDummy(cb, poll_func)]);
                             },
                             get: function (name, cb) {
-                                request([id, 'getProperty', name], callbackOrDummy(cb, poll_func));
+                                request_queue.push([[id, 'getProperty', name], callbackOrDummy(cb, poll_func)]);
                             },
                             set: function (name, val, cb) {
-                                request([id, 'setProperty', name, val], callbackOrDummy(cb, poll_func));
+                                request_queue.push([[id, 'setProperty', name, val], callbackOrDummy(cb, poll_func)]);
                             },
                             evaluate: function (fn, cb) {
                                 var extra_args = [];
@@ -166,7 +195,7 @@ exports.create = function (callback, options) {
                                     extra_args = Array.prototype.slice.call(arguments, 2);
                                     // console.log("Extra args: " + extra_args);
                                 }
-                                request([id, 'evaluate', fn.toString()].concat(extra_args), callbackOrDummy(cb, poll_func));
+                                request_queue.push([[id, 'evaluate', fn.toString()].concat(extra_args), callbackOrDummy(cb, poll_func)]);
                             }
                         };
                         methods.forEach(function (method) {
@@ -177,12 +206,14 @@ exports.create = function (callback, options) {
                                     callback = all_args.pop();
                                 }
                                 var req_params = [id, method];
-                                request(req_params.concat(all_args), callbackOrDummy(callback, poll_func));
+                                request_queue.push([req_params.concat(all_args), callbackOrDummy(callback, poll_func)]);
                             }
                         });
                         
+                        next();
                         return callback(null, pages[id]);
                     }
+                    next();
                     callback(null, results);
                 });
             });
@@ -197,18 +228,18 @@ exports.create = function (callback, options) {
             req.setHeader('Content-Length', Buffer.byteLength(json));
             req.write(json);
             req.end();
-        }
+        });
 
         var proxy = {
             process: phantom,
             createPage: function(callback) {
-                request([0,'createPage'], callbackOrDummy(callback, poll_func));
+                request_queue.push([[0,'createPage'], callbackOrDummy(callback, poll_func)]);
             },
             injectJs: function(filename,callback){
-                request([0,'injectJs', filename], callbackOrDummy(callback, poll_func));
+                request_queue.push([[0,'injectJs', filename], callbackOrDummy(callback, poll_func)]);
             },
             addCookie: function(cookie, callback){
-                request([0,'addCookie', cookie], callbackOrDummy(callback, poll_func));
+                request_queue.push([[0,'addCookie', cookie], callbackOrDummy(callback, poll_func)]);
             },                 
             exit: function(callback){
                 phantom.kill('SIGTERM');
