@@ -188,7 +188,7 @@ exports.create = function (callback, options) {
             });
 
             req.on('error', function (err) {
-                throw "Request() error: " + err;
+                console.warn("Request() error evaluating " + method + "() call: " + err);
             })
 
             req.setHeader('Content-Type', 'application/json');

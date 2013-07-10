@@ -15,10 +15,10 @@ exports.testPhantomPageEvaluate=function(beforeExit,assert){
 				assert.ifError(err);
 				assert.equal(status,'success');
 				page.evaluate(function(){
-					return document.getElementsByTagName('h1')[0].innerText;
-				},function(err,result){
+					return { h1text: document.getElementsByTagName('h1')[0].innerText };
+				},function (err, result) {
 					assert.ifError(err);
-					assert.equal(result,'Hello World');
+					assert.equal(result.h1text,'Hello World');
 					server.close();
 					ph.exit();
 				});
