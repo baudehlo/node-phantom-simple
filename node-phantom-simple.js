@@ -158,7 +158,8 @@ exports.create = function (callback, options) {
                 });
                 res.on('end', function () {
                     if (!data) {
-                        console.log("No response body for: " + method);
+                        next();
+                        return callback("No response body for page." + method + "()");
                     }
                     var results = JSON.parse(data);
                     // console.log("Response: ", results);
