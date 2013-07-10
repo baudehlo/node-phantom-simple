@@ -220,6 +220,7 @@ exports.create = function (callback, options) {
 
             req.on('error', function (err) {
                 console.warn("Request() error evaluating " + method + "() call: " + err);
+                next();
             })
 
             req.setHeader('Content-Type', 'application/json');
@@ -250,9 +251,6 @@ exports.create = function (callback, options) {
         };
         
         callback(null, proxy);
-
-
-        // phantom.kill();
     });
 }
 
