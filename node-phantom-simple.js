@@ -16,12 +16,7 @@ var queue = function (worker) {
             q.process();
         },
         process: function () {
-            if (_q.length !== 1) {
-                return;
-            }
-            if (running) {
-                return;
-            }
+            if (running || _q.length === 0) return;
             running = true;
             var cb = function () {
                 running = false;
@@ -163,7 +158,8 @@ exports.create = function (callback, options) {
                 });
                 res.on('end', function () {
                     if (!data) {
-                        console.log("No response body for: " + method);
+                        next();
+                        return callback("No response body for page." + method + "()");
                     }
                     var results = JSON.parse(data);
                     // console.log("Response: ", results);
@@ -213,6 +209,8 @@ exports.create = function (callback, options) {
                         next();
                         return callback(null, pages[id]);
                     }
+
+                    // Not createPage - just run the callback
                     next();
                     callback(null, results);
                 });
@@ -220,6 +218,7 @@ exports.create = function (callback, options) {
 
             req.on('error', function (err) {
                 console.warn("Request() error evaluating " + method + "() call: " + err);
+                next();
             })
 
             req.setHeader('Content-Type', 'application/json');
@@ -251,8 +250,6 @@ exports.create = function (callback, options) {
         };
         
         callback(null, proxy);
-
-        // phantom.kill();
     });
 }
 
@@ -302,8 +299,9 @@ function setup_long_poll (phantom, port, pages) {
             });
         });
         req.on('error', function (err) {
+            if (dead) return;
             console.warn("Poll Request error: " + err);
-        })
+        });
     };
 
     var repeater = function () {
