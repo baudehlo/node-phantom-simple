@@ -243,6 +243,7 @@ exports.create = function (callback, options) {
             },                 
             exit: function(callback){
                 phantom.kill('SIGTERM');
+                callbackOrDummy(callback)();
             },
             on: function () {
                 phantom.on.apply(phantom, arguments);
@@ -250,7 +251,6 @@ exports.create = function (callback, options) {
         };
         
         callback(null, proxy);
-
 
         // phantom.kill();
     });
