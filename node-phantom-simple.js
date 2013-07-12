@@ -134,7 +134,54 @@ exports.create = function (callback, options) {
 
         var pages = {};
 
-        var poll_func = setup_long_poll(phantom, port, pages);
+        var setup_new_page = function (id) {
+            // console.log("Page created with id: " + id);
+            var methods = [
+                'addCookie', 'childFramesCount', 'childFramesName', 'clearCookies', 'close',
+                'currentFrameName', 'deleteCookie', 'evaluateJavaScript',
+                'evaluateAsync', 'getPage', 'go', 'goBack', 'goForward', 'includeJs',
+                'injectJs', 'open', 'openUrl', 'release', 'reload', 'render', 'renderBase64',
+                'sendEvent', 'setContent', 'stop', 'switchToFocusedFrame', 'switchToFrame',
+                'switchToFrame', 'switchToChildFrame', 'switchToChildFrame', 'switchToMainFrame',
+                'switchToParentFrame', 'uploadFile',
+            ];
+            var page = {
+                setFn: function (name, fn, cb) {
+                    request_queue.push([[id, 'setFunction', name, fn.toString()], callbackOrDummy(cb, poll_func)]);
+                },
+                get: function (name, cb) {
+                    request_queue.push([[id, 'getProperty', name], callbackOrDummy(cb, poll_func)]);
+                },
+                set: function (name, val, cb) {
+                    request_queue.push([[id, 'setProperty', name, val], callbackOrDummy(cb, poll_func)]);
+                },
+                evaluate: function (fn, cb) {
+                    var extra_args = [];
+                    if (arguments.length > 2) {
+                        extra_args = Array.prototype.slice.call(arguments, 2);
+                        // console.log("Extra args: " + extra_args);
+                    }
+                    request_queue.push([[id, 'evaluate', fn.toString()].concat(extra_args), callbackOrDummy(cb, poll_func)]);
+                },
+            };
+            methods.forEach(function (method) {
+                page[method] = function () {
+                    var all_args = Array.prototype.slice.call(arguments);
+                    var callback = null;
+                    if (all_args.length > 0 && typeof all_args[all_args.length - 1] === 'function') {
+                        callback = all_args.pop();
+                    }
+                    var req_params = [id, method];
+                    request_queue.push([req_params.concat(all_args), callbackOrDummy(callback, poll_func)]);
+                }
+            });
+
+            pages[id] = page;
+
+            return page;            
+        }
+
+        var poll_func = setup_long_poll(phantom, port, pages, setup_new_page);
 
         var request_queue = queue(function (paramarr, next) {
             var params = paramarr[0];
@@ -165,49 +212,10 @@ exports.create = function (callback, options) {
                     // console.log("Response: ", results);
                     if (method === 'createPage') {
                         var id = results.page_id;
-                        // console.log("Page created with id: " + id);
-                        var methods = [
-                            'addCookie', 'childFramesCount', 'childFramesName', 'clearCookies', 'close',
-                            'currentFrameName', 'deleteCookie', 'evaluateJavaScript',
-                            'evaluateAsync', 'getPage', 'go', 'goBack', 'goForward', 'includeJs',
-                            'injectJs', 'open', 'openUrl', 'release', 'reload', 'render', 'renderBase64',
-                            'sendEvent', 'setContent', 'stop', 'switchToFocusedFrame', 'switchToFrame',
-                            'switchToFrame', 'switchToChildFrame', 'switchToChildFrame', 'switchToMainFrame',
-                            'switchToParentFrame', 'uploadFile',
-                        ];
-                        pages[id] = {
-                            setFn: function (name, fn, cb) {
-                                request_queue.push([[id, 'setFunction', name, fn.toString()], callbackOrDummy(cb, poll_func)]);
-                            },
-                            get: function (name, cb) {
-                                request_queue.push([[id, 'getProperty', name], callbackOrDummy(cb, poll_func)]);
-                            },
-                            set: function (name, val, cb) {
-                                request_queue.push([[id, 'setProperty', name, val], callbackOrDummy(cb, poll_func)]);
-                            },
-                            evaluate: function (fn, cb) {
-                                var extra_args = [];
-                                if (arguments.length > 2) {
-                                    extra_args = Array.prototype.slice.call(arguments, 2);
-                                    // console.log("Extra args: " + extra_args);
-                                }
-                                request_queue.push([[id, 'evaluate', fn.toString()].concat(extra_args), callbackOrDummy(cb, poll_func)]);
-                            }
-                        };
-                        methods.forEach(function (method) {
-                            pages[id][method] = function () {
-                                var all_args = Array.prototype.slice.call(arguments);
-                                var callback = null;
-                                if (all_args.length > 0 && typeof all_args[all_args.length - 1] === 'function') {
-                                    callback = all_args.pop();
-                                }
-                                var req_params = [id, method];
-                                request_queue.push([req_params.concat(all_args), callbackOrDummy(callback, poll_func)]);
-                            }
-                        });
+                        var page = setup_new_page(id);
                         
                         next();
-                        return callback(null, pages[id]);
+                        return callback(null, page);
                     }
 
                     // Not createPage - just run the callback
@@ -253,7 +261,7 @@ exports.create = function (callback, options) {
     });
 }
 
-function setup_long_poll (phantom, port, pages) {
+function setup_long_poll (phantom, port, pages, setup_new_page) {
     // console.log("Setting up long poll");
 
     var http_opts = {
@@ -286,7 +294,13 @@ function setup_long_poll (phantom, port, pages) {
                 // }
                 results.forEach(function (r) {
                     if (r.page_id) {
-                        if (pages[r.page_id] && pages[r.page_id][r.callback]) {
+                        if (pages[r.page_id] && r.callback === 'onPageCreated') {
+                            var new_page = setup_new_page(r.args[0]);
+                            if (pages[r.page_id].onPageCreated) {
+                                pages[r.page_id].onPageCreated(new_page);
+                            }
+                        }
+                        else if (pages[r.page_id] && pages[r.page_id][r.callback]) {
                             pages[r.page_id][r.callback].call(pages[r.page_id], unwrapArray(r.args));
                         }
                     }

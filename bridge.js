@@ -82,7 +82,7 @@ var service = webserver.listen('127.0.0.1:0', function (req, res) {
 
 var callbacks = [
 	'onAlert', 'onCallback', 'onClosing', 'onConfirm', 'onConsoleMessage', 'onError', 'onFilePicker',
-	'onInitialized', 'onLoadFinished', 'onLoadStarted', 'onNavigationRequested', 'onPageCreated',
+	'onInitialized', 'onLoadFinished', 'onLoadStarted', 'onNavigationRequested',
 	'onPrompt', 'onResourceRequested', 'onResourceReceived', 'onResourceError', 'onUrlChanged',
 ];
 
@@ -97,24 +97,34 @@ function setup_callbacks (id, page) {
 	        // console.log("Callback stack size now: " + callback_stack.length);
         };
 	});
+	// Special case this
+	page.onPageCreated = function (page) {
+		var new_id = setup_page(page);
+		callback_stack.push({'page_id': id, 'callback': 'onPageCreated', 'args': [new_id]})
+	}
+}
+
+function setup_page (page) {
+	var id    = page_id++;
+	page.getProperty = function (prop) {
+		return page[prop];
+	}
+	page.setProperty = function (prop, val) {
+		return page[prop] = val;
+	}
+	page.setFunction = function (name, fn) {
+		page[name] = eval('(' + fn + ')');
+		return true;
+	}
+	pages[id] = page;
+	setup_callbacks(id, page);
+	return id;
 }
 
 var global_methods = {
 	createPage: function () {
-		var id    = page_id++;
 		var page  = webpage.create();
-		page.getProperty = function (prop) {
-			return page[prop];
-		}
-		page.setProperty = function (prop, val) {
-			return page[prop] = val;
-		}
-		page.setFunction = function (name, fn) {
-			page[name] = eval('(' + fn + ')');
-			return true;
-		}
-		pages[id] = page;
-		setup_callbacks(id, page);
+		var id = setup_page(page);
 		return { page_id: id };
 	},
 
