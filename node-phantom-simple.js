@@ -163,6 +163,38 @@ exports.create = function (callback, options) {
                     }
                     request_queue.push([[id, 'evaluate', fn.toString()].concat(extra_args), callbackOrDummy(cb, poll_func)]);
                 },
+                waitForSelector: function (selector, cb, timeout) {
+                    var self = this,
+                        startTime = Date.now(),
+                        timeoutInterval = 150,
+                        testRunning = false,
+                        //if evaluate succeeds, invokes callback w/ true, if timeout,
+                        // invokes w/ false, otherwise just exits
+                        testForSelector = function () {
+                            var elapsedTime = Date.now() - startTime;
+
+                            if (elapsedTime > timeout) {
+                                self.options.debug && console.log('warning: timeout occurred while waiting for selector:"%s"'.yellow, selector);
+                                cb(false);
+                                return;
+                            }
+
+                            self.evaluate(function (selector) {
+                                return document.querySelectorAll(selector).length;
+                            }, function (result) {
+                                testRunning = false;
+                                if (result > 0) {//selector found
+                                    cb(true);
+                                }
+                                else {
+                                    setTimeout(testForSelector, timeoutInterval);
+                                }
+                            }, selector);
+                        };
+
+                    timeout = timeout || 10000; //default timeout is 2 sec;
+                    setTimeout(testForSelector, timeoutInterval);
+                },
             };
             methods.forEach(function (method) {
                 page[method] = function () {
@@ -198,6 +230,7 @@ exports.create = function (callback, options) {
             }
 
             var req = http.request(http_opts, function (res) {
+                var err = res.statusCode == 500 ? true : false;
                 res.setEncoding('utf8');
                 var data = '';
                 res.on('data', function (chunk) {
@@ -210,6 +243,12 @@ exports.create = function (callback, options) {
                     }
                     var results = JSON.parse(data);
                     // console.log("Response: ", results);
+                    
+                    if (err) {
+                        next();
+                        return callback(results);
+                    }
+
                     if (method === 'createPage') {
                         var id = results.page_id;
                         var page = setup_new_page(id);
