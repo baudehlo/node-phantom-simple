@@ -164,12 +164,12 @@ exports.create = function (callback, options) {
                     request_queue.push([[id, 'evaluate', fn.toString()].concat(extra_args), callbackOrDummy(cb, poll_func)]);
                 },
                 waitForSelector: function (selector, cb, timeout) {
-                    startTime = Date.now(),
-                    timeoutInterval = 150,
-                    testRunning = false,
+                    var startTime = Date.now();
+                    var timeoutInterval = 150;
+                    var testRunning = false;
                     //if evaluate succeeds, invokes callback w/ true, if timeout,
                     // invokes w/ false, otherwise just exits
-                    testForSelector = function () {
+                    var testForSelector = function () {
                         var elapsedTime = Date.now() - startTime;
 
                         if (elapsedTime > timeout) {
@@ -189,7 +189,7 @@ exports.create = function (callback, options) {
                         }, selector);
                     };
 
-                    timeout = timeout || 10000; //default timeout is 2 sec;
+                    timeout = timeout || 10000; //default timeout is 10 sec;
                     setTimeout(testForSelector, timeoutInterval);
                 },
             };
