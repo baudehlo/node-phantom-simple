@@ -164,33 +164,30 @@ exports.create = function (callback, options) {
                     request_queue.push([[id, 'evaluate', fn.toString()].concat(extra_args), callbackOrDummy(cb, poll_func)]);
                 },
                 waitForSelector: function (selector, cb, timeout) {
-                    var self = this,
-                        startTime = Date.now(),
-                        timeoutInterval = 150,
-                        testRunning = false,
-                        //if evaluate succeeds, invokes callback w/ true, if timeout,
-                        // invokes w/ false, otherwise just exits
-                        testForSelector = function () {
-                            var elapsedTime = Date.now() - startTime;
+                    startTime = Date.now(),
+                    timeoutInterval = 150,
+                    testRunning = false,
+                    //if evaluate succeeds, invokes callback w/ true, if timeout,
+                    // invokes w/ false, otherwise just exits
+                    testForSelector = function () {
+                        var elapsedTime = Date.now() - startTime;
 
-                            if (elapsedTime > timeout) {
-                                self.options.debug && console.log('warning: timeout occurred while waiting for selector:"%s"'.yellow, selector);
-                                cb(false);
-                                return;
+                        if (elapsedTime > timeout) {
+                            return cb("Timeout waiting for selector: " + selector);
+                        }
+
+                        page.evaluate(function (selector) {
+                            return document.querySelectorAll(selector).length;
+                        }, function (result) {
+                            testRunning = false;
+                            if (result > 0) {//selector found
+                                cb();
                             }
-
-                            self.evaluate(function (selector) {
-                                return document.querySelectorAll(selector).length;
-                            }, function (result) {
-                                testRunning = false;
-                                if (result > 0) {//selector found
-                                    cb(true);
-                                }
-                                else {
-                                    setTimeout(testForSelector, timeoutInterval);
-                                }
-                            }, selector);
-                        };
+                            else {
+                                setTimeout(testForSelector, timeoutInterval);
+                            }
+                        }, selector);
+                    };
 
                     timeout = timeout || 10000; //default timeout is 2 sec;
                     setTimeout(testForSelector, timeoutInterval);
