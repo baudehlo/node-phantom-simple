@@ -99,7 +99,7 @@ exports.create = function (callback, options) {
                             cmd = 'lsof -p ' + pid + ' | grep LISTEN';
                             break;
                 case 'win32':
-                            cmd = 'netstat -ano | find "LISTENING" | find "' + pid + '"';
+                            cmd = 'netstat -ano | find "' + pid + '"';
                             break;
                 default:
                             phantom.kill();
