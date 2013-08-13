@@ -98,6 +98,9 @@ exports.create = function (callback, options) {
                 case 'darwin':
                             cmd = 'lsof -p ' + pid + ' | grep LISTEN';
                             break;
+                case 'win32':
+                            cmd = 'netstat -ano | find "LISTENING" | find "' + pid + '"';
+                            break;
                 default:
                             phantom.kill();
                             return callback("Your OS is not supported yet. Tell us how to get the listening port based on PID");
@@ -321,7 +324,15 @@ function setup_long_poll (phantom, port, pages, setup_new_page) {
             });
             res.on('end', function () {
                 // console.log("Poll results: " + data);
-                var results = JSON.parse(data);
+                if (dead) return;
+                try {
+                    var results = JSON.parse(data);
+                }
+                catch (err) {
+                    console.warn("Error parsing JSON from phantom: " + err);
+                    console.warn("Data from phantom was: " + data);
+                    return;
+                }
                 // if (results.length > 0) {
                 //     console.log("Long poll results: ", results);
                 // }
