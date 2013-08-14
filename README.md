@@ -1,7 +1,8 @@
 Node-phantom-simple
 ---------------
 
-This is a bridge between [PhantomJs](http://phantomjs.org/) and [Node.js](http://nodejs.org/).
+This is a bridge between [PhantomJs](http://phantomjs.org/) and
+[Node.js](http://nodejs.org/).
 
 This module is API compatible with node-phantom but doesn't rely on WebSockets
 or socket.io. In essence the communication between Node and Phantom has been
@@ -10,13 +11,17 @@ made significantly simpler. It has the following advantages over node-phantom:
   - Fewer dependencies/layers.
   - Just uses the HTTP server module built into Node.
   - Doesn't use the unreliable and huge socket.io.
-  - Works under `cluster` (node-phantom does not due to how `server.listen(0)` works in cluster)
+  - Works under `cluster` (node-phantom does not due to how `server.listen(0)`
+    works in cluster)
 
 Requirements
 ------------
-You will need to install PhantomJS first. The bridge assumes that the "phantomjs" binary is available in the PATH.
+You will need to install PhantomJS first. The bridge assumes that the
+"phantomjs" binary is available in the PATH, or you will need to pass its path
+into the `phantom.create() method.
 
-For running the tests you will need [Expresso](http://visionmedia.github.com/expresso/). The tests require PhantomJS 1.6 or newer to pass.
+For running the tests you will need [Expresso](http://visionmedia.github.com/expresso/).
+The tests require PhantomJS 1.6 or newer to pass.
 
 Installing
 ----------
@@ -26,7 +31,12 @@ Installing
 
 Usage
 -----
-You can use it exactly like you would use Node-Phantom, for example this is an adaptation of a [web scraping example](http://net.tutsplus.com/tutorials/javascript-ajax/web-scraping-with-node-js/) :
+You can use it exactly like you would use Node-Phantom, and the entire API of
+PhantomJS should work, with the exception that every method call takes a
+callback (always as the last parameter) instead of returning values.
+
+For example this is an adaptation of a
+[web scraping example](http://net.tutsplus.com/tutorials/javascript-ajax/web-scraping-with-node-js/) :
 
 ```javascript
 var phantom=require('node-phantom-simple');
@@ -64,14 +74,16 @@ phantom.create(function(err,ph) {
 });
 ```
 
-### phantom.create(callback,options)
+### phantom.create(callback, options)
 
 `options` is an optional object with options for how to start PhantomJS.
-`options.parameters` is an array of parameters that will be passed to PhantomJS on the commandline.
+`options.parameters` is an array of parameters that will be passed to PhantomJS
+on the commandline.
+
 For example
 
 ```javascript
-phantom.create(callback,{parameters:{'ignore-ssl-errors':'yes'}})
+phantom.create(callback, {parameters: {'ignore-ssl-errors': 'yes'}})
 ```
 
 will start phantom as:
@@ -80,14 +92,49 @@ will start phantom as:
 phantomjs --ignore-ssl-errors=yes
 ```
 
-You may also pass in a custom path if you need to select a specific instance of PhantomJS or it is not present in PATH environment.
-This can for example be used together with the [PhantomJS package](https://npmjs.org/package/phantomjs) like so:
+You may also pass in a custom path if you need to select a specific instance
+of PhantomJS or it is not present in PATH environment. This can for example
+be used together with the [PhantomJS package](https://npmjs.org/package/phantomjs)
+like so:
 
 ```javascript
-phantom.create(callback,{phantomPath:require('phantomjs').path})
+phantom.create(callback, {phantomPath: require('phantomjs').path})
 ```
 
-You can also have a look at the test folder to see some examples of using the API.
+You can also have a look at the test folder to see some examples of using the
+API, however the de-factor reference is the
+[PhantomJS documentation](https://github.com/ariya/phantomjs/wiki/API-Reference).
+Just change all return values into callbacks.
+
+WebPage Callbacks
+-----
+
+All of the WebPage callbacks have been implemented including `onCallback`, and
+are set the same way as with the core phantomjs library:
+
+```javascript
+page.onResourceReceived = function(response) {
+    console.log('Response (#' + response.id + ', stage "' + response.stage + '"): ' + JSON.stringify(response));
+};
+```
+
+This includes the `onPageCreated` callback which receives a new `page` object.
+
+Properties
+-----
+
+Properties on the [WebPage](https://github.com/ariya/phantomjs/wiki/API-Reference-WebPage)
+and [Phantom](https://github.com/ariya/phantomjs/wiki/API-Reference-phantom)
+objects are accessed via the `get()/set()` method calls:
+
+```javascript
+page.get('content', function (html) {
+  console.log("Page HTML is: " + html);
+})
+page.set('zoomfactor', 0.25, function () {
+  page.render('capture.png');
+})
+```
 
 License - MIT
 -----
