@@ -278,15 +278,27 @@ exports.create = function (callback, options) {
 
         var proxy = {
             process: phantom,
-            createPage: function(callback) {
+            createPage: function (callback) {
                 request_queue.push([[0,'createPage'], callbackOrDummy(callback, poll_func)]);
             },
-            injectJs: function(filename,callback){
+            injectJs: function (filename,callback) {
                 request_queue.push([[0,'injectJs', filename], callbackOrDummy(callback, poll_func)]);
             },
-            addCookie: function(cookie, callback){
+            addCookie: function (cookie, callback) {
                 request_queue.push([[0,'addCookie', cookie], callbackOrDummy(callback, poll_func)]);
-            },                 
+            },
+            clearCookies: function (callback) {
+                request_queue.push([[0, 'clearCookies'], callbackOrDummy(callback, poll_func)]);
+            },
+            deleteCookie: function (cookie, callback) {
+                request_queue.push([[0, 'deleteCookie', cookie], callbackOrDummy(callback, poll_func)]);
+            },
+            set : function (property, value, callback) {
+                request_queue.push([[0, 'setProperty', property, value], callbackOrDummy(callback, poll_func)]);
+            },
+            get : function (property, callback) {
+                request_queue.push([[0, 'getProperty', property], callbackOrDummy(callback, poll_func)]);
+            },
             exit: function(callback){
                 phantom.kill('SIGTERM');
                 callbackOrDummy(callback)();

@@ -149,11 +149,11 @@ var global_methods = {
 	},
 
 	getProperty: function (prop) {
-		return phantom.prop;
+		return phantom[prop];
 	},
 
 	setProperty: function (prop, value) {
-		phantom.prop = value;
+		phantom[prop] = value;
 		return true;
 	},
 }
