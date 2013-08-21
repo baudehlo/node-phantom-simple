@@ -7,10 +7,17 @@ var util            = require('util');
 
 var POLL_INTERVAL   = process.env.POLL_INTERVAL || 500;
 
+// To get the old behaviour, set this to true
+exports.callbackArrays = false;
+
 var queue = function (worker) {
     var _q = [];
     var running = false;
     var q = {
+        immediate: function (obj) {
+            // This is basically just run right now - used for networkRequest functions
+            worker(obj, function () {});
+        },
         push: function (obj) {
             _q.push(obj);
             q.process();
@@ -137,6 +144,21 @@ exports.create = function (callback, options) {
 
         var pages = {};
 
+        var setup_resource = function (id) {
+            var resource = {
+                abort: function (cb) {
+                    request_queue.immediate([[0 - id, 'abort'], callbackOrDummy(cb, poll_func)]);
+                },
+                changeUrl: function (url, cb) {
+                    request_queue.immediate([[0 - id, 'changeUrl', url], callbackOrDummy(cb, poll_func)]);
+                },
+                setHeader: function (key, value, cb) {
+                    request_queue.immediate([[0 - id, 'setHeader', key, value], callbackOrDummy(cb, poll_func)]);
+                }
+            };
+            return resource;
+        }
+
         var setup_new_page = function (id) {
             // console.log("Page created with id: " + id);
             var methods = [
@@ -213,7 +235,7 @@ exports.create = function (callback, options) {
             return page;            
         }
 
-        var poll_func = setup_long_poll(phantom, port, pages, setup_new_page);
+        var poll_func = setup_long_poll(phantom, port, pages, setup_new_page, setup_resource);
 
         var request_queue = queue(function (paramarr, next) {
             var params = paramarr[0];
@@ -312,7 +334,7 @@ exports.create = function (callback, options) {
     });
 }
 
-function setup_long_poll (phantom, port, pages, setup_new_page) {
+function setup_long_poll (phantom, port, pages, setup_new_page, setup_resource) {
     // console.log("Setting up long poll");
 
     var http_opts = {
@@ -359,8 +381,19 @@ function setup_long_poll (phantom, port, pages, setup_new_page) {
                                 pages[r.page_id].onPageCreated(new_page);
                             }
                         }
+                        else if (pages[r.page_id] && r.callback === 'onResourceRequested') {
+                            var new_resource = setup_resource(r.args[1]);
+                            if (pages[r.page_id].onResourceRequested) {
+                                pages[r.page_id].onResourceRequested(r.args[0], new_resource);
+                            }
+                        }
                         else if (pages[r.page_id] && pages[r.page_id][r.callback]) {
-                            pages[r.page_id][r.callback].call(pages[r.page_id], unwrapArray(r.args));
+                            if (exports.callbackArrays) {
+                                pages[r.page_id][r.callback].call(pages[r.page_id], unwrapArrays(r.args));
+                            }
+                            else {
+                                pages[r.page_id][r.callback].apply(pages[r.page_id], r.args);
+                            }
                         }
                     }
                     else {

@@ -3,7 +3,9 @@ var webserver   = require('webserver').create();
 var system      = require('system');
 
 var pages  = {};
+var requested_resources = {};
 var page_id = 1;
+var resource_id= 1;
 
 var callback_stack = [];
 
@@ -42,7 +44,7 @@ var service = webserver.listen('127.0.0.1:0', function (req, res) {
 		var method  = request.method;
 		var output  = null;
 		var error   = null;
-		if (request.page) {
+		if (request.page > 0) {
 			if (method === 'open') { // special case this as it's the only one with a callback
 				return page_open(res, pages[request.page], request.args);
 			}
@@ -52,6 +54,23 @@ var service = webserver.listen('127.0.0.1:0', function (req, res) {
 			}
 			catch (err) {
 				error = err;
+			}
+		}
+		else if (request.page < 0) {
+			var id = (0 - request.page);
+			console.log(requested_resources[1]);
+			system.stderr.writeLine("Looking for id: " + id + " in " + JSON.stringify(requested_resources));
+			try {
+				var network_req = requested_resources[id];
+				if (network_req == null) { throw "No network_req found" }
+				system.stderr.writeLine("Calling " + network_req + "." + method + "()");
+				system.stderr.writeLine("Abort method: " + network_req[method]);
+				var output = network_req[method].apply(network_req, request.args);
+				system.stderr.writeLine("Output: " + output);
+			}
+			catch (err) {
+				error = err;
+				system.stderr.writeLine("Error: " + err);
 			}
 		}
 		else {
@@ -91,6 +110,16 @@ function setup_callbacks (id, page) {
         page[cb] = function (parm) {
             var args = Array.prototype.slice.call(arguments);
             if ((cb==='onResourceRequested') && (parm.url.indexOf('data:image') === 0)) return;
+            if (cb === 'onLoadFinished') {
+            	requested_resources = {};
+            	resource_id = 1;
+            }
+            if (cb === 'onResourceRequested') {
+            	// console.log("Args1: ", args[1]);
+            	requested_resources[resource_id] = args[1];
+            	var id = resource_id++;
+            	args[1] = id;
+            }
             // console.log("Callback: " + cb);
             if (cb==='onClosing') { args = [] };
             callback_stack.push({'page_id': id, 'callback': cb, 'args': args});
