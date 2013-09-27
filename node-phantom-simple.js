@@ -88,37 +88,50 @@ exports.create = function (callback, options) {
             // Phantom is busted and can't tell us this we need to use lsof on mac, and netstat on Linux
             // Note that if phantom could tell you the port it ends up listening
             // on we wouldn't need to do this - but instead we have to.
+            
             var platform = require('os').platform();
             var pid = phantom.pid;
             var cmd = null;
-            switch (platform) {
-                case 'linux':
-                            cmd = 'netstat -nlp | grep ' + pid + '/';
-                            break;
-                case 'darwin':
-                            cmd = 'lsof -p ' + pid + ' | grep LISTEN';
-                            break;
-                case 'win32':
-                            cmd = 'netstat -ano | find "' + pid + '"';
-                            break;
-                default:
-                            phantom.kill();
-                            return callback("Your OS is not supported yet. Tell us how to get the listening port based on PID");
-            }
 
-            exec(cmd, function (err, stdout, stderr) {
-                if (err !== null) {
-                    phantom.kill();
-                    return callback("Error executing command to extract port: " + err);
+            var runPidFinder = function () {
+                switch (platform) {
+                    case 'linux':
+                        cmd = 'PPID=`ps -f --ppid ' + pid + ' | grep ' + pid + ' | awk \' { print $2 } \'` ; netstat -nlp | grep ${PPID}/';
+                        break;
+                    case 'darwin':
+                        cmd = 'lsof -p ' + pid + ' | grep LISTEN';
+                        break;
+                    case 'win32':
+                        cmd = 'netstat -ano | find "' + pid + '"';
+                        break;
+                    case 'cygwin':
+                        cmd = 'netstat -ano | grep ' + pid;
+                        break;
+                    default:
+                        phantom.kill();
+                        return callback("Your OS is not supported yet. Tell us how to get the listening port based on PID");
                 }
-                var match = /(?:127\.0\.0\.1|localhost):(\d+)/i.exec(stdout);
-                if (!match) {
-                    phantom.kill();
-                    return callback("Error extracting port from: " + stdout);
-                }
-                var port = match[1];
-                callback(null, phantom, port);
-            });
+
+                exec(cmd, function (err, stdout, stderr) {
+                    if (err !== null && platform == 'win32') {
+                        platform = 'cygwin';
+                        return runPidFinder();
+                    }
+                    if (err !== null) {
+                        phantom.kill();
+                        return callback("Error executing command to extract port: " + err);
+                    }
+                    var match = /(?:127\.0\.0\.1|localhost):(\d+)/i.exec(stdout);
+                    if (!match) {
+                        phantom.kill();
+                        return callback("Error extracting port from: " + stdout);
+                    }
+                    var port = match[1];
+                    callback(null, phantom, port);
+                });
+            };
+            
+            runPidFinder();
         });
 
         setTimeout(function () {    //wait a bit to see if the spawning of phantomjs immediately fails due to bad path or similar
