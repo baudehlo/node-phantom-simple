@@ -96,7 +96,7 @@ exports.create = function (callback, options) {
             var runPidFinder = function () {
                 switch (platform) {
                     case 'linux':
-                        cmd = 'netstat -nlp | grep ' + pid + '/';
+                        cmd = 'PPID=`ps -f --ppid ' + pid + ' | grep ' + pid + ' | awk \' { print $2 } \'` ; netstat -nlp | grep ${PPID}/';
                         break;
                     case 'darwin':
                         cmd = 'lsof -p ' + pid + ' | grep LISTEN';
