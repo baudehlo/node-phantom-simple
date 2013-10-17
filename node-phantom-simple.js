@@ -93,13 +93,13 @@ exports.create = function (callback, options) {
             var cmd = null;
             switch (platform) {
                 case 'linux':
-                            cmd = 'netstat -nlp | grep ' + pid + '/';
+                            cmd = 'netstat -nlp | grep "[[:space:]]' + pid + '/"';
                             break;
                 case 'darwin':
                             cmd = 'lsof -p ' + pid + ' | grep LISTEN';
                             break;
                 case 'win32':
-                            cmd = 'netstat -ano | find "' + pid + '"';
+                            cmd = 'netstat -ano | findstr /R "\\<' + pid + '$"';
                             break;
                 default:
                             phantom.kill();
