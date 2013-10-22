@@ -87,37 +87,65 @@ exports.create = function (callback, options) {
             // Now need to figure out what port it's listening on - since
             // Phantom is busted and can't tell us this we need to use lsof on mac, and netstat on Linux
             // Note that if phantom could tell you the port it ends up listening
-            // on we wouldn't need to do this - but instead we have to.
+            // on we wouldn't need to do this - server.port returns 0 when you ask
+            // for port 0 (i.e. random free port). If they ever fix that this will
+            // become much simpler
             var platform = require('os').platform();
-            var pid = phantom.pid;
             var cmd = null;
             switch (platform) {
                 case 'linux':
-                            cmd = 'netstat -nlp | grep "[[:space:]]' + pid + '/"';
+                            cmd = 'netstat -nlp | grep "[[:space:]]%d/"';
                             break;
                 case 'darwin':
-                            cmd = 'lsof -p ' + pid + ' | grep LISTEN';
+                            cmd = 'lsof -p %d | grep LISTEN';
                             break;
                 case 'win32':
-                            cmd = 'netstat -ano | findstr /R "\\<' + pid + '$"';
+                            cmd = 'netstat -ano | findstr /R "\\<%d$"';
                             break;
                 default:
                             phantom.kill();
                             return callback("Your OS is not supported yet. Tell us how to get the listening port based on PID");
             }
 
-            exec(cmd, function (err, stdout, stderr) {
+            // We do this twice - first to get ports this process is listening on
+            // and again to get ports phantom is listening on. This is to work
+            // around this bug in libuv: https://github.com/joyent/libuv/issues/962
+            // - this is only necessary when using cluster, but it's here regardless
+            var my_pid_command = util.format(cmd, process.pid);
+
+            exec(my_pid_command, function (err, stdout, stderr) {
                 if (err !== null) {
-                    phantom.kill();
-                    return callback("Error executing command to extract port: " + err);
+                    // This can happen if grep finds no matching lines, so ignore it.
+                    stdout = '';
                 }
-                var match = /(?:127\.0\.0\.1|localhost):(\d+)/i.exec(stdout);
-                if (!match) {
-                    phantom.kill();
-                    return callback("Error extracting port from: " + stdout);
+                var re = /(?:127\.0\.0\.1|localhost):(\d+)/ig, match;
+                var ports = [];
+                
+                while (match = re.exec(stdout)) {
+                    ports.push(match[1]);
                 }
-                var port = match[1];
-                callback(null, phantom, port);
+
+                var phantom_pid_command = util.format(cmd, phantom.pid);
+
+                exec(phantom_pid_command, function (err, stdout, stderr) {
+                    if (err !== null) {
+                        phantom.kill();
+                        return callback("Error executing command to extract phantom ports: " + err);
+                    }
+                    var port;
+                    while (match = re.exec(stdout)) {
+                        if (ports.indexOf(match[1]) == -1) {
+                            port = match[1];
+                        }
+                    }
+
+                    if (!port) {
+                        phantom.kill();
+                        return callback("Error extracting port from: " + stdout);
+                    }
+
+                    callback(null, phantom, port);
+                });
             });
         });
 
