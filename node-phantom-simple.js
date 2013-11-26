@@ -50,6 +50,11 @@ function unwrapArray (arr) {
     return arr && arr.length == 1 ? arr[0] : arr
 }
 
+function wrapArray(arr) {
+    // Ensure that arr is an Array
+    return (arr instanceof Array) ? arr : [arr];
+}
+
 exports.create = function (callback, options) {
     if (options === undefined) options = {};
     if (options.phantomPath === undefined) options.phantomPath = 'phantomjs';
@@ -388,7 +393,15 @@ function setup_long_poll (phantom, port, pages, setup_new_page) {
                             }
                         }
                         else if (pages[r.page_id] && pages[r.page_id][r.callback]) {
-                            pages[r.page_id][r.callback].call(pages[r.page_id], unwrapArray(r.args));
+                            var callbackFunc = pages[r.page_id][r.callback];
+                            if (callbackFunc.length > 1) {
+                                // We use `apply` if the function is expecting multiple args
+                                callbackFunc.apply(pages[r.page_id], wrapArray(r.args));
+                            }
+                            else {
+                                // Old `call` behaviour is deprecated
+                                callbackFunc.call(pages[r.page_id], unwrapArray(r.args));
+                            }
                         }
                     }
                     else {
