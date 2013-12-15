@@ -68,6 +68,30 @@ exports.create = function (callback, options) {
         args = args.concat([__dirname + '/bridge.js']);
 
         var phantom = spawn(options.phantomPath, args);
+
+        // Ensure that the child process is closed when this process dies
+        function closeChild() {
+          try {
+            phantom.kill();
+          } catch(e) {}
+          process.exit(1);
+        }
+
+        ['SIGINT', 'SIGTERM'].forEach(function(sig) {
+          process.on(sig, closeChild);
+        });
+
+        process.on('uncaughtException', function(err) {
+          // Make sure to print the stack
+          console.error(err.stack);
+          // Kill child process
+          try {
+            phantom.kill();
+          } catch(e) {}
+          // Continue to exit the process
+          process.exit(1);
+        });
+
         phantom.once('error', function (err) {
         	callback(err);
         });
