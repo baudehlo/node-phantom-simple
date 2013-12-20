@@ -95,7 +95,11 @@ exports.create = function (callback, options) {
         phantom.once('error', function (err) {
         	callback(err);
         });
+
         phantom.stderr.on('data', function (data) {
+            if (options.ignoreErrorPattern && options.ignoreErrorPattern.exec(data)) {
+                return;
+            }
             return console.warn('phantom stderr: '+data);
         });
         var exitCode = 0;
