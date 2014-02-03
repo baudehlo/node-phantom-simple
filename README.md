@@ -133,7 +133,7 @@ and [Phantom](https://github.com/ariya/phantomjs/wiki/API-Reference-phantom)
 objects are accessed via the `get()/set()` method calls:
 
 ```javascript
-page.get('content', function (html) {
+page.get('content', function (err,html) {
   console.log("Page HTML is: " + html);
 })
 page.set('zoomfactor', 0.25, function () {
