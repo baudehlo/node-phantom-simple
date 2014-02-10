@@ -21,10 +21,32 @@ phantom.onError = function (msg, trace) {
 
 function page_open (res, page, args) {
 	page.open.apply(page, args.concat(function (success) {
+		res.statusCode = 200;
 		res.setHeader('Content-Type', 'application/json');
 		res.write(JSON.stringify(success));
+		// console.log("Close1");
 		res.close();
 	}))
+}
+
+function include_js (res, page, args) {
+	res.statusCode = 200;
+	res.setHeader('Content-Type', 'application/json');
+	res.write('');
+	// console.log("Calling includeJs");
+	var response = page.includeJs.apply(page, args.concat(function () {
+		// console.log("Came back...");
+		try {
+			res.write('');
+			// console.log("Close2");
+			res.close();
+		}
+		catch (e) {
+			if (!/cannot call function of deleted QObject/.test(e)) { // Ignore this error
+				page.onError(e);
+			}
+		}
+	}));
 }
 
 var service = webserver.listen('127.0.0.1:0', function (req, res) {
@@ -35,6 +57,7 @@ var service = webserver.listen('127.0.0.1:0', function (req, res) {
 		// console.log("Sending back " + callback_stack.length + " callbacks");
 		res.write(JSON.stringify(callback_stack));
 		callback_stack = [];
+		// console.log("Close3");
 		res.close();
 	}
 	else if (req.method === 'POST') {
@@ -46,9 +69,13 @@ var service = webserver.listen('127.0.0.1:0', function (req, res) {
 			if (method === 'open') { // special case this as it's the only one with a callback
 				return page_open(res, pages[request.page], request.args);
 			}
+			else if (method === 'includeJs') {
+				return include_js(res, pages[request.page], request.args);
+			}
 			try {
 				// console.log("Calling: page." + method + "(" + request.args + ")");
 				var output = pages[request.page][method].apply(pages[request.page], request.args);
+				// console.log("Got output: ", output);
 			}
 			catch (err) {
 				error = err;
@@ -73,6 +100,7 @@ var service = webserver.listen('127.0.0.1:0', function (req, res) {
 			res.statusCode = 200;
 			res.write(JSON.stringify(output || null));
 		}
+		// console.log("Close4")
 		res.close();
 	}
 	else {
