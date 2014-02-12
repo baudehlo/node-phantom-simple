@@ -115,10 +115,12 @@ exports.create = function (callback, options) {
             phantom.stdout.on('data', function (data) {
                 return console.log('phantom stdout: '+data);
             });
-            if (!/Ready/.test(data)) {
+            if (!/Ready.*/.test(data)) {
                 phantom.kill();
                 return callback("Unexpected output from PhantomJS: " + data);
             }
+            var phantom_pid = data.toString().replace('Ready ', '');
+
             // Now need to figure out what port it's listening on - since
             // Phantom is busted and can't tell us this we need to use lsof on mac, and netstat on Linux
             // Note that if phantom could tell you the port it ends up listening
@@ -160,7 +162,7 @@ exports.create = function (callback, options) {
                     ports.push(match[1]);
                 }
 
-                var phantom_pid_command = util.format(cmd, phantom.pid);
+                var phantom_pid_command = util.format(cmd, phantom_pid);
 
                 exec(phantom_pid_command, function (err, stdout, stderr) {
                     if (err !== null) {

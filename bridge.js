@@ -186,4 +186,4 @@ var global_methods = {
 	},
 }
 
-console.log("Ready");
+console.log("Ready " + system.pid);
