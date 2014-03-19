@@ -7,8 +7,6 @@ var util            = require('util');
 
 var POLL_INTERVAL   = process.env.POLL_INTERVAL || 500;
 
-var POSTING = false;
-
 var queue = function (worker) {
     var _q = [];
     var running = false;
@@ -292,7 +290,7 @@ exports.create = function (callback, options) {
                 method: 'POST',
             }
 
-            POSTING = true;
+            phantom.POSTING = true;
 
             var req = http.request(http_opts, function (res) {
                 // console.log("Got a response: " + res.statusCode);
@@ -303,7 +301,7 @@ exports.create = function (callback, options) {
                     data += chunk;
                 });
                 res.on('end', function () {
-                    POSTING = false;
+                    phantom.POSTING = false;
                     if (!data) {
                         next();
                         return callback("No response body for page." + method + "()");
@@ -395,7 +393,7 @@ function setup_long_poll (phantom, port, pages, setup_new_page) {
 
     var poll_func = function (cb) {
         if (dead) return;
-        if (POSTING) return cb();
+        if (phantom.POSTING) return cb();
         // console.log("Polling...");
         var req = http.get(http_opts, function(res) {
             res.setEncoding('utf8');
