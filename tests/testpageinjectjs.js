@@ -27,7 +27,7 @@ module.exports = {
                 page.open('http://localhost:'+server.address().port,function(err,status){
                     test.ifError(err);
                     test.equal(status,'success');
-                    page.injectJs('test/files/modifytest.js',function(err){
+                    page.injectJs('tests/files/modifytest.js',function(err){
                         //no delay necessary because it should have been executed synchronously
                         test.ifError(err);
                         page.evaluate(function(){
