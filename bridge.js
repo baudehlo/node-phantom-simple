@@ -32,7 +32,7 @@ function page_open (res, page, args) {
 function include_js (res, page, args) {
 	res.statusCode = 200;
 	res.setHeader('Content-Type', 'application/json');
-	res.write('');
+	res.write('"success"');
 	// console.log("Calling includeJs");
 	var response = page.includeJs.apply(page, args.concat(function () {
 		// console.log("Came back...");
@@ -186,4 +186,4 @@ var global_methods = {
 	},
 }
 
-console.log("Ready");
+console.log("Ready [" + system.pid + "]");

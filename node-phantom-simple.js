@@ -70,27 +70,24 @@ exports.create = function (callback, options) {
         var phantom = spawn(options.phantomPath, args);
 
         // Ensure that the child process is closed when this process dies
-        function closeChild() {
-          try {
-            phantom.kill();
-          } catch(e) {}
-          process.exit(1);
-        }
+        var closeChild = function () {
+            try {
+                phantom.kill();
+            } catch(e) {}
+            process.exit(1);
+        };
 
+        var uncaughtHandler = function (err) {
+            console.error(err.stack);
+            closeChild();
+        };
+
+        // Note it's possible to blow up maxEventListeners doing this - consider moving to a single handler.
         ['SIGINT', 'SIGTERM'].forEach(function(sig) {
-          process.on(sig, closeChild);
+            process.on(sig, closeChild);
         });
 
-        process.on('uncaughtException', function(err) {
-          // Make sure to print the stack
-          console.error(err.stack);
-          // Kill child process
-          try {
-            phantom.kill();
-          } catch(e) {}
-          // Continue to exit the process
-          process.exit(1);
-        });
+        process.on('uncaughtException', uncaughtHandler);
 
         phantom.once('error', function (err) {
         	callback(err);
@@ -104,6 +101,10 @@ exports.create = function (callback, options) {
         });
         var exitCode = 0;
         phantom.once('exit', function (code) {
+            ['SIGINT', 'SIGTERM'].forEach(function(sig) {
+                process.removeListener(sig, closeChild);
+            });
+            process.removeListener('uncaughtException', uncaughtHandler);
             exitCode = code;
         });
 
@@ -113,10 +114,15 @@ exports.create = function (callback, options) {
             phantom.stdout.on('data', function (data) {
                 return console.log('phantom stdout: '+data);
             });
-            if (!/Ready/.test(data)) {
+            
+            var matches = data.toString().match(/Ready \[(\d+)\]/);
+            if (!matches) {
                 phantom.kill();
                 return callback("Unexpected output from PhantomJS: " + data);
             }
+
+            var phantom_pid = parseInt(matches[1], 0);
+
             // Now need to figure out what port it's listening on - since
             // Phantom is busted and can't tell us this we need to use lsof on mac, and netstat on Linux
             // Note that if phantom could tell you the port it ends up listening
@@ -134,6 +140,9 @@ exports.create = function (callback, options) {
                             break;
                 case 'win32':
                             cmd = 'netstat -ano | findstr /R "\\<%d$"';
+                            break;
+                case 'cygwin':
+                            cmd = 'netstat -ano | grep %d';
                             break;
                 default:
                             phantom.kill();
@@ -158,7 +167,7 @@ exports.create = function (callback, options) {
                     ports.push(match[1]);
                 }
 
-                var phantom_pid_command = util.format(cmd, phantom.pid);
+                var phantom_pid_command = util.format(cmd, phantom_pid);
 
                 exec(phantom_pid_command, function (err, stdout, stderr) {
                     if (err !== null) {

@@ -10,9 +10,12 @@
   },
   "main": "node-phantom-simple.js",
   "scripts": {
-    "test": "expresso"
+    "test": "./run_tests"
   },
   "dependencies": {
+  },
+  "devDependencies": {
+    "nodeunit" : ""
   },
   "optionalDependencies": {},
   "engines": {
