@@ -139,7 +139,7 @@ exports.create = function (callback, options) {
                             cmd = 'lsof -p %d | grep LISTEN';
                             break;
                 case 'win32':
-                            cmd = 'netstat -ano | findstr /R "\\<%d$"';
+                            cmd = 'netstat -ano | findstr /R "\\<%d\\>"';
                             break;
                 case 'cygwin':
                             cmd = 'netstat -ano | grep %d';
