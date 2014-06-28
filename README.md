@@ -1,5 +1,5 @@
-Node-phantom-simple
----------------
+Node-phantom-simple [![Build Status](https://travis-ci.org/apendua/node-phantom-simple.svg?branch=travis)](https://travis-ci.org/apendua/node-phantom-simple)
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 This is a bridge between [PhantomJs](http://phantomjs.org/) and
 [Node.js](http://nodejs.org/).
