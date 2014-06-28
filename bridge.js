@@ -19,6 +19,32 @@ phantom.onError = function (msg, trace) {
 	phantom.exit(1);
 }
 
+function lookup(obj, key, value) {
+	// key can be either string or an array of strings
+	if (!(typeof obj === 'object')) {
+		return;
+	}
+	if (typeof key === 'string') {
+		key = key.split('.');
+	}
+	if (!Array.isArray(key)) {
+		return;
+	}
+	if (arguments.length > 2) {
+		if (key.length === 1) {
+			return obj[key[0]] = value;
+		} else {
+			return lookup(obj[key[0]], key.slice(1), value);
+		}
+	} else {
+		if (key.length === 1) {
+			return obj[key[0]];
+		} else {
+			return lookup(obj[key[0]], key.slice(1));
+		}
+	}
+}
+
 function page_open (res, page, args) {
 	page.open.apply(page, args.concat(function (success) {
 		res.statusCode = 200;
@@ -135,10 +161,10 @@ function setup_callbacks (id, page) {
 function setup_page (page) {
 	var id    = page_id++;
 	page.getProperty = function (prop) {
-		return page[prop];
+		return lookup(page, prop);
 	}
 	page.setProperty = function (prop, val) {
-		return page[prop] = val;
+		return lookup(page, prop, val);
 	}
 	page.setFunction = function (name, fn) {
 		page[name] = eval('(' + fn + ')');
