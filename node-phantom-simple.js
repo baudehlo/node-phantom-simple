@@ -136,7 +136,7 @@ exports.create = function (callback, options) {
                             cmd = 'netstat -nlp | grep "[[:space:]]%d/"';
                             break;
                 case 'darwin':
-                            cmd = 'lsof -p %d | grep LISTEN';
+                            cmd = 'lsof -np %d | grep LISTEN';
                             break;
                 case 'win32':
                             cmd = 'netstat -ano | findstr /R "\\<%d\\>"';
