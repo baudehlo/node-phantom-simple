@@ -111,7 +111,7 @@ var service = webserver.listen('127.0.0.1:0', function (req, res) {
 var callbacks = [
 	'onAlert', 'onCallback', 'onClosing', 'onConfirm', 'onConsoleMessage', 'onError', 'onFilePicker',
 	'onInitialized', 'onLoadFinished', 'onLoadStarted', 'onNavigationRequested',
-	'onPrompt', 'onResourceRequested', 'onResourceReceived', 'onResourceError', 'onUrlChanged',
+	'onPrompt', 'onResourceRequested', 'onResourceReceived', 'onResourceTimeout', 'onResourceError', 'onUrlChanged',
 ];
 
 function setup_callbacks (id, page) {
