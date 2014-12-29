@@ -251,7 +251,7 @@ exports.create = function (callback, options) {
 
                         page.evaluate(function (selector) {
                             return document.querySelectorAll(selector).length;
-                        }, function (result) {
+                        }, function (err, result) {
                             testRunning = false;
                             if (result > 0) {//selector found
                                 cb();
