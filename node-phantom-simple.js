@@ -35,9 +35,15 @@ function callbackOrDummy (callback, poll_func) {
         return function () {
             var args = Array.prototype.slice.call(arguments);
             // console.log("Polling for results before returning with: " + JSON.stringify(args));
-            poll_func(function () {
+            poll_func(function (err) {
                 // console.log("Inside...");
-                callback.apply(null, args);
+                if (err) {
+                    // We could send back the original arguments,
+                    // but I'm assuming that this error is better.
+                    callback(err)
+                } else {
+                    callback.apply(null, args);
+                }
             });
         }
     }
@@ -339,7 +345,7 @@ exports.create = function (callback, options) {
 
             req.on('error', function (err) {
                 console.warn("Request() error evaluating " + method + "() call: " + err);
-                next();
+                callback("Request() error evaluating " + method + "() call: " + err);
             })
 
             req.setHeader('Content-Type', 'application/json');
@@ -401,7 +407,7 @@ function setup_long_poll (phantom, port, pages, setup_new_page) {
     phantom.once('exit', function () { dead = true; });
 
     var poll_func = function (cb) {
-        if (dead) return;
+        if (dead) return cb('Phantom Process died');
         if (phantom.POSTING) return cb();
         // console.log("Polling...");
         var req = http.get(http_opts, function(res) {
@@ -412,14 +418,15 @@ function setup_long_poll (phantom, port, pages, setup_new_page) {
             });
             res.on('end', function () {
                 // console.log("Poll results: " + data);
-                if (dead) return;
+                if (dead) return cb('Phantom Process died');
                 try {
                     var results = JSON.parse(data);
                 }
                 catch (err) {
                     console.warn("Error parsing JSON from phantom: " + err);
                     console.warn("Data from phantom was: " + data);
-                    return;
+                    return cb("Error parsing JSON from phantom: " + err
+                            + "\nData from phantom was: " + data);
                 }
                 // if (results.length > 0) {
                 //     console.log("Long poll results: ", results);
