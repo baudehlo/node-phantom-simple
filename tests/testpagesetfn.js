@@ -14,7 +14,8 @@ module.exports = {
     },
     testPhantomPageSetFn: function (test) {
         var url = 'http://localhost:'+server.address().port+'/';
-        phantom.create(errOr(function (ph) {
+        phantom.create({ignoreErrorPattern: /CoreText performance note/}
+        , errOr(function (ph) {
             ph.createPage(errOr(function (page) {
                 var messageForwardedByOnConsoleMessage = undefined;
                 var localMsg = undefined;
@@ -27,7 +28,7 @@ module.exports = {
                     ph.exit();
                 }));
             }));
-        }), {ignoreErrorPattern: /CoreText performance note/});
+        }));
 
         function errOr(fn) {
             return function(err, res) {

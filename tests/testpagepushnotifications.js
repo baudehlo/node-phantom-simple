@@ -15,7 +15,8 @@ module.exports = {
     testPhantomPagePushNotifications: function (test) {
         var url = 'http://localhost:'+server.address().port+'/';
         var onLoadFinishedFired = false;
-        phantom.create(errOr(function(ph){
+        phantom.create({ignoreErrorPattern: /CoreText performance note/}
+        , errOr(function(ph){
             ph.createPage(errOr(function(page){
                 var events = registerCallbacks(page);
 
@@ -47,7 +48,8 @@ module.exports = {
                         page.evaluate(function(a,b){
                             console.log(a);
                             console.log(b);
-                        }, errOr(function(){
+                        }, 'A', 'B'
+                        , errOr(function(){
                             test.deepEqual(events.onConsoleMessage, ['A', 'B']);
 
                             ph.createPage(errOr(function(page){
@@ -60,11 +62,11 @@ module.exports = {
                                 };
                                 page.open(url);
                             }));
-                        }), 'A', 'B');
+                        }));
                     }));
                 }));
             }));
-        }), {ignoreErrorPattern: /CoreText performance note/});
+        }));
 
         function registerCallbacks(page) {
             var events = {};

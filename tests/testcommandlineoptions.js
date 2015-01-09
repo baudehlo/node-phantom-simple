@@ -57,7 +57,8 @@ module.exports = {
             test.done();
             return;
         }
-        phantom.create(errOr(function (ph) {
+        phantom.create({parameters: {proxy: 'localhost:' + proxyServer.address().port}}
+        , errOr(function (ph) {
             phantomInstance = ph;
             ph.createPage(errOr(function (page) {
                 page.open('http://localhost/testPhantomPagePushNotifications', errOr(function () {
@@ -68,7 +69,7 @@ module.exports = {
                     });
                 }));
             }));
-        }), {parameters: {proxy: 'localhost:' + proxyServer.address().port}});
+        }));
 
         function errOr (fn) {
             return function (err, res) {

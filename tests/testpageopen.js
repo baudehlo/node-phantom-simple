@@ -13,7 +13,8 @@ module.exports = {
         server.close(cb);
     },
     testPhantomPageOpen: function (test) {
-        phantom.create(function (error,ph) {
+        phantom.create({ignoreErrorPattern: /CoreText performance note/}
+        , function (error,ph) {
             // console.log("Phantom created...");
             test.ifError(error);
             ph.createPage(function (err,page) {
@@ -27,6 +28,6 @@ module.exports = {
                     ph.exit();
                 });
             });
-        }, {ignoreErrorPattern: /CoreText performance note/});
+        });
     },
 };
