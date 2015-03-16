@@ -150,6 +150,9 @@ exports.create = function (callback, options) {
                 case 'cygwin':
                             cmd = 'netstat -ano | grep %d';
                             break;
+                case 'freebsd':
+                            cmd = 'sockstat | grep %d';
+                            break;
                 default:
                             phantom.kill();
                             return callback("Your OS is not supported yet. Tell us how to get the listening port based on PID");
