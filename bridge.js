@@ -1,9 +1,11 @@
 var webpage     = require('webpage');
 var webserver   = require('webserver').create();
 var system      = require('system');
+var args        = system.args;
 
 var pages  = {};
 var page_id = 1;
+var webserverPort = args[1];
 
 var callback_stack = [];
 
@@ -49,7 +51,7 @@ function include_js (res, page, args) {
 	}));
 }
 
-var service = webserver.listen('127.0.0.1:0', function (req, res) {
+var service = webserver.listen('127.0.0.1:' + (webserverPort || 0), function (req, res) {
 	// console.log("Got a request of type: " + req.method);
 	if (req.method === 'GET') {
 		res.statusCode = 200;
