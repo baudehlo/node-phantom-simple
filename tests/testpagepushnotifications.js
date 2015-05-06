@@ -37,11 +37,11 @@ module.exports = {
                         test.deepEqual(events.onConsoleMessage, ['POW', 'WOW']);
 
                         // console.log(JSON.stringify(events.onError));
-                        test.equal(events.onError.length, 1);
-                        test.equal(events.onError[0].length, 2);
-                        var err = events.onError[0];
-                        test.ok(/variable: conXsole/.test(err[0]));
-                        test.equal(err[1][0].line, 1);
+                        test.equal(events.onError && events.onError.length, 1);
+                        var err = events.onError && events.onError[0];
+                        test.equal(err && err.length, 2);
+                        test.ok(/variable: conXsole/.test(err && err[0]));
+                        test.equal(err && err[1][0].line, 1);
 
                         events.onConsoleMessage = [];
                         page.evaluate(function(a,b){
