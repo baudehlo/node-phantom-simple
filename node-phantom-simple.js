@@ -1,16 +1,16 @@
 "use strict";
 
-var http = require('http');
-var child_process = require('child_process');
-var spawn = child_process.spawn;
-var exec = child_process.exec;
-var util = require('util');
-var Page = require('./lib/page');
-var Queue = require('./lib/queue');
-var _utils = require('./lib/_utils');
-var callbackOrDummy = _utils.callbackOrDummy;
-var unwrapArray = _utils.unwrapArray;
-var wrapArray = _utils.wrapArray;
+var http = require('http')
+    , child_process = require('child_process')
+    , spawn = child_process.spawn
+    , exec = child_process.exec
+    , util = require('util')
+    , Page = require('./lib/page')
+    , requestQueue = require('./lib/request_queue')
+    , _utils = require('./lib/_utils')
+    , callbackOrDummy = _utils.callbackOrDummy
+    , unwrapArray = _utils.unwrapArray
+    , wrapArray = _utils.wrapArray;
 
 var POLL_INTERVAL   = process.env.POLL_INTERVAL || 500;
 
@@ -180,76 +180,20 @@ exports.create = function (callback, options) {
 
         var poll_func = setup_long_poll(phantom, port, pages, setup_new_page);
 
-        var request_queue = new Queue(function (paramarr, next) {
-            var params = paramarr[0];
-            var callback = paramarr[1];
-            var page = params[0];
-            var method = params[1];
-            var args = params.slice(2);
-            
-            var http_opts = {
-                hostname: '127.0.0.1',
-                port: port,
-                path: '/',
-                method: 'POST',
-            }
-
-            phantom.POSTING = true;
-
-            var req = http.request(http_opts, function (res) {
-                // console.log("Got a response: " + res.statusCode);
-                var err = res.statusCode == 500 ? true : false;
-                res.setEncoding('utf8');
-                var data = '';
-                res.on('data', function (chunk) {
-                    data += chunk;
-                });
-                res.on('end', function () {
-                    phantom.POSTING = false;
-                    if (!data) {
-                        next();
-                        return callback("No response body for page." + method + "()");
-                    }
-                    var results = JSON.parse(data);
-                    // console.log("Response: ", results);
-                    
-                    if (err) {
-                        next();
-                        return callback(results);
-                    }
-
-                    if (method === 'createPage') {
-                        var id = results.page_id;
-                        var page = setup_new_page(id);
-                        
-                        next();
-                        return callback(null, page);
-                    }
-
-                    // Not createPage - just run the callback
-                    next();
-                    callback(null, results);
-                });
-            });
-
-            req.on('error', function (err) {
-                console.warn("Request() error evaluating " + method + "() call: " + err);
-                callback("Request() error evaluating " + method + "() call: " + err);
-            })
-
-            req.setHeader('Content-Type', 'application/json');
-
-            var json = JSON.stringify({page: page, method: method, args: args});
-            // console.log("Sending: ", json);
-            req.setHeader('Content-Length', Buffer.byteLength(json));
-            req.write(json);
-            req.end();
-        });
+        var request_queue = requestQueue(phantom, { port: port });
 
         var proxy = {
             process: phantom,
             createPage: function (callback) {
-                request_queue.push([[0,'createPage'], callbackOrDummy(callback, poll_func)]);
+                request_queue.push([[0,'createPage'], callbackOrDummy(function (err, results) {
+                    if (err)
+                        callback(err);
+                    else {
+                        var id = results.page_id;
+                        var page = setup_new_page(id);
+                        return callback(null, page);
+                    }
+                }, poll_func)]);
             },
             injectJs: function (filename,callback) {
                 request_queue.push([[0,'injectJs', filename], callbackOrDummy(callback, poll_func)]);
