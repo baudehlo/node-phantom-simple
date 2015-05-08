@@ -1,9 +1,15 @@
 "use strict";
 
-var http            = require('http');
-var spawn 			= require('child_process').spawn;
-var exec            = require('child_process').exec;
-var util            = require('util');
+var http = require('http');
+var child_process = require('child_process');
+var spawn = child_process.spawn;
+var exec = child_process.exec;
+var util = require('util');
+var Page = require('./lib/page');
+var _utils = require('./lib/_utils');
+var callbackOrDummy = _utils.callbackOrDummy;
+var unwrapArray = _utils.unwrapArray;
+var wrapArray = _utils.wrapArray;
 
 var POLL_INTERVAL   = process.env.POLL_INTERVAL || 500;
 
@@ -29,37 +35,6 @@ var queue = function (worker) {
     return q;
 }
 
-function callbackOrDummy (callback, poll_func) {
-    if (!callback) return function () {};
-    if (poll_func) {
-        return function () {
-            var args = Array.prototype.slice.call(arguments);
-            // console.log("Polling for results before returning with: " + JSON.stringify(args));
-            poll_func(function (err) {
-                // console.log("Inside...");
-                if (err) {
-                    // We could send back the original arguments,
-                    // but I'm assuming that this error is better.
-                    callback(err)
-                } else {
-                    callback.apply(null, args);
-                }
-            });
-        }
-    }
-    else {
-        return callback;
-    }
-}
-
-function unwrapArray (arr) {
-    return arr && arr.length == 1 ? arr[0] : arr
-}
-
-function wrapArray(arr) {
-    // Ensure that arr is an Array
-    return (arr instanceof Array) ? arr : [arr];
-}
 
 exports.create = function (callback, options) {
     if (options === undefined) options = {};
@@ -216,79 +191,11 @@ exports.create = function (callback, options) {
 
         var pages = {};
 
-        var setup_new_page = function (id) {
+        function setup_new_page(id) {
             // console.log("Page created with id: " + id);
-            var methods = [
-                'addCookie', 'childFramesCount', 'childFramesName', 'clearCookies', 'close',
-                'currentFrameName', 'deleteCookie', 'evaluateJavaScript',
-                'evaluateAsync', 'getPage', 'go', 'goBack', 'goForward', 'includeJs',
-                'injectJs', 'open', 'openUrl', 'release', 'reload', 'render', 'renderBase64',
-                'sendEvent', 'setContent', 'stop', 'switchToFocusedFrame', 'switchToFrame',
-                'switchToFrame', 'switchToChildFrame', 'switchToChildFrame', 'switchToMainFrame',
-                'switchToParentFrame', 'uploadFile',
-            ];
-            var page = {
-                setFn: function (name, fn, cb) {
-                    request_queue.push([[id, 'setFunction', name, fn.toString()], callbackOrDummy(cb, poll_func)]);
-                },
-                get: function (name, cb) {
-                    request_queue.push([[id, 'getProperty', name], callbackOrDummy(cb, poll_func)]);
-                },
-                set: function (name, val, cb) {
-                    request_queue.push([[id, 'setProperty', name, val], callbackOrDummy(cb, poll_func)]);
-                },
-                evaluate: function (fn, cb) {
-                    var extra_args = [];
-                    if (arguments.length > 2) {
-                        extra_args = Array.prototype.slice.call(arguments, 2);
-                        // console.log("Extra args: " + extra_args);
-                    }
-                    request_queue.push([[id, 'evaluate', fn.toString()].concat(extra_args), callbackOrDummy(cb, poll_func)]);
-                },
-                waitForSelector: function (selector, cb, timeout) {
-                    var startTime = Date.now();
-                    var timeoutInterval = 150;
-                    var testRunning = false;
-                    //if evaluate succeeds, invokes callback w/ true, if timeout,
-                    // invokes w/ false, otherwise just exits
-                    var testForSelector = function () {
-                        var elapsedTime = Date.now() - startTime;
 
-                        if (elapsedTime > timeout) {
-                            return cb("Timeout waiting for selector: " + selector);
-                        }
-
-                        page.evaluate(function (selector) {
-                            return document.querySelectorAll(selector).length;
-                        }, function (err, result) {
-                            testRunning = false;
-                            if (result > 0) {//selector found
-                                cb();
-                            }
-                            else {
-                                setTimeout(testForSelector, timeoutInterval);
-                            }
-                        }, selector);
-                    };
-
-                    timeout = timeout || 10000; //default timeout is 10 sec;
-                    setTimeout(testForSelector, timeoutInterval);
-                },
-            };
-            methods.forEach(function (method) {
-                page[method] = function () {
-                    var all_args = Array.prototype.slice.call(arguments);
-                    var callback = null;
-                    if (all_args.length > 0 && typeof all_args[all_args.length - 1] === 'function') {
-                        callback = all_args.pop();
-                    }
-                    var req_params = [id, method];
-                    request_queue.push([req_params.concat(all_args), callbackOrDummy(callback, poll_func)]);
-                }
-            });
-
+            var page = new Page(id, request_queue, poll_func);
             pages[id] = page;
-
             return page;            
         }
 
