@@ -6,34 +6,13 @@ var spawn = child_process.spawn;
 var exec = child_process.exec;
 var util = require('util');
 var Page = require('./lib/page');
+var Queue = require('./lib/queue');
 var _utils = require('./lib/_utils');
 var callbackOrDummy = _utils.callbackOrDummy;
 var unwrapArray = _utils.unwrapArray;
 var wrapArray = _utils.wrapArray;
 
 var POLL_INTERVAL   = process.env.POLL_INTERVAL || 500;
-
-var queue = function (worker) {
-    var _q = [];
-    var running = false;
-    var q = {
-        push: function (obj) {
-            _q.push(obj);
-            q.process();
-        },
-        process: function () {
-            if (running || _q.length === 0) return;
-            running = true;
-            var cb = function () {
-                running = false;
-                q.process();
-            }
-            var task = _q.shift();
-            worker(task, cb);
-        }
-    }
-    return q;
-}
 
 
 exports.create = function (callback, options) {
@@ -201,7 +180,7 @@ exports.create = function (callback, options) {
 
         var poll_func = setup_long_poll(phantom, port, pages, setup_new_page);
 
-        var request_queue = queue(function (paramarr, next) {
+        var request_queue = new Queue(function (paramarr, next) {
             var params = paramarr[0];
             var callback = paramarr[1];
             var page = params[0];
