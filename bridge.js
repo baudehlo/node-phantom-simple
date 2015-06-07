@@ -133,13 +133,24 @@ function setup_callbacks (id, page) {
 	}
 }
 
+function extend(obj, props,overwrite) {
+    for(var prop in props) {
+        if(props.hasOwnProperty(prop)) {
+            if(obj[prop]&&overwrite||!obj[prop])
+            	obj[prop] = props[prop];
+        }
+    }
+}
+
 function setup_page (page) {
 	var id    = page_id++;
 	page.getProperty = function (prop) {
 		return page[prop];
 	}
 	page.setProperty = function (prop, val) {
-		return page[prop] = val;
+		extend(val,page[prop]);
+		page[prop] = val;
+		return val;
 	}
 	page.setFunction = function (name, fn) {
 		page[name] = eval('(' + fn + ')');
