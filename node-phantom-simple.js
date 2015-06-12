@@ -67,13 +67,13 @@ exports.create = function (callback, options) {
     if (options.parameters === undefined) options.parameters = {};
 
     function spawnPhantom (callback) {
-        var args=[];
+        var args=options.phantomPath.split(' ');
         for(var parm in options.parameters) {
             args.push('--' + parm + '=' + options.parameters[parm]);
         }
         args = args.concat([__dirname + '/bridge.js']);
 
-        var phantom = spawn(options.phantomPath, args);
+        var phantom = spawn(args[0], args.slice(1));
 
         // Ensure that the child process is closed when this process dies
         var closeChild = function () {
