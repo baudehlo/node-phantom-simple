@@ -4,15 +4,18 @@ Node-phantom-simple
 This is a bridge between [PhantomJS](http://phantomjs.org/) and
 [Node.js](http://nodejs.org/).
 
-This module is API compatible with node-phantom but doesn't rely on WebSockets
-or socket.io. In essence the communication between Node and Phantom has been
-simplified significantly. It has the following advantages over node-phantom:
+This module is API-compatible with
+[node-phantom](https://www.npmjs.com/package/node-phantom) but doesn't rely on
+[WebSockets](http://en.wikipedia.org/wiki/WebSocket) or
+[socket.io](http://socket.io/). In essence the communication between Node and
+Phantom has been simplified significantly. It has the following advantages over
+node-phantom:
 
   - Fewer dependencies/layers.
-  - Just uses the HTTP server module built into Node.
+  - Just uses the [`HTTP.Server` module built into Node](http://nodejs.org/api/http.html).
   - Doesn't use the unreliable and huge socket.io.
-  - Works under `cluster` (node-phantom does not due to how `server.listen(0)`
-    works in cluster)
+  - Works under [`cluster`](http://nodejs.org/api/cluster.html) (node-phantom
+    does not, due to [how `server.listen(0)` works in cluster](https://nodejs.org/api/cluster.html#cluster_how_it_works))
 
 Requirements
 ------------
@@ -102,9 +105,8 @@ like so:
 phantom.create(callback, {phantomPath: require('phantomjs').path})
 ```
 
-You can also have a look at the test folder to see some examples of using the
-API, however the de-facto reference is the
-[PhantomJS documentation](https://github.com/ariya/phantomjs/wiki/API-Reference).
+You can also have a look at [the test directory](tests/) to see some examples of using the
+API, however the de-facto reference is the [PhantomJS documentation](https://github.com/ariya/phantomjs/wiki/API-Reference).
 Just mentally substitute all return values for callbacks.
 
 `options.ignoreErrorPattern` is a regular expression that can be used to silence spurious
