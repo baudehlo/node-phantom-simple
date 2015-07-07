@@ -120,11 +120,19 @@ exports.create = function (callback, options) {
             phantom.stdout.on('data', function (data) {
                 return console.log('phantom stdout: '+data);
             });
-            
-            var matches = data.toString().match(/Ready \[(\d+)\]/);
+
+            var matches = data.toString().match(/Ready \[(\d+)\] \[(.+?)\]/);
             if (!matches) {
                 phantom.kill();
                 return callback("Unexpected output from PhantomJS: " + data);
+            }
+
+            var phantom_port = matches[2].indexOf(':') === -1 ? matches[2] : matches[2].split(':')[1];
+            phantom_port = parseInt(phantom_port, 0);
+
+            if (phantom_port !== 0) {
+              callback(null, phantom, phantom_port);
+              return;
             }
 
             var phantom_pid = parseInt(matches[1], 0);
@@ -302,7 +310,7 @@ exports.create = function (callback, options) {
             var args = params.slice(2);
             
             var http_opts = {
-                hostname: '127.0.0.1',
+                hostname: 'localhost',
                 port: port,
                 path: '/',
                 method: 'POST',
@@ -347,6 +355,12 @@ exports.create = function (callback, options) {
             });
 
             req.on('error', function (err) {
+                // If phantom already killed by `exit` command - callback without error
+                if (phantom.killed) {
+                  callback();
+                  return;
+                }
+
                 console.warn("Request() error evaluating " + method + "() call: " + err);
                 callback("Request() error evaluating " + method + "() call: " + err);
             })
@@ -385,7 +399,10 @@ exports.create = function (callback, options) {
             },
             exit: function(callback){
                 phantom.kill('SIGTERM');
-                callbackOrDummy(callback)();
+
+                // In case of SlimerJS `kill` will close only wrapper of xulrunner.
+                // We should send `exit` command to process.
+                request_queue.push([[0, 'exit', 0], callbackOrDummy(callback)]);
             },
             on: function () {
                 phantom.on.apply(phantom, arguments);
@@ -400,7 +417,7 @@ function setup_long_poll (phantom, port, pages, setup_new_page) {
     // console.log("Setting up long poll");
 
     var http_opts = {
-        hostname: '127.0.0.1',
+        hostname: 'localhost',
         port: port,
         path: '/',
         method: 'GET',
