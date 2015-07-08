@@ -62,8 +62,25 @@ function wrapArray(arr) {
     return (arr instanceof Array) ? arr : [arr];
 }
 
-exports.create = function (callback, options) {
-    if (options === undefined) options = {};
+var pageEvaluateDeprecatedFn = util.deprecate(function () {}, "Deprecated 'page.evaluate(fn, callback, args...)' syntax - use 'page.evaluate(fn, args..., callback)' instead");
+var createDeprecatedFn = util.deprecate(function () {}, "Deprecated '.create(callback, options)' syntax - use '.create(options, callback)' instead");
+var pageWaitForSelectorDeprecatedFn = util.deprecate(function () {}, "Deprecated 'page.waitForSelector(selector, callback, timeout)' syntax - use 'page.waitForSelector(selector, timeout, callback)' instead");
+
+exports.create = function (options, callback) {
+    if (callback && Object.prototype.toString.call(options) === '[object Function]') {
+      createDeprecatedFn();
+
+      var tmp = options;
+
+      options = callback;
+      callback = tmp;
+    }
+
+    if (!callback) {
+      callback = options;
+      options = {};
+    }
+
     if (options.phantomPath === undefined) options.phantomPath = 'phantomjs';
     if (options.parameters === undefined) options.parameters = {};
 
@@ -249,12 +266,32 @@ exports.create = function (callback, options) {
                 evaluate: function (fn, cb) {
                     var extra_args = [];
                     if (arguments.length > 2) {
-                        extra_args = Array.prototype.slice.call(arguments, 2);
-                        // console.log("Extra args: " + extra_args);
+                        if (Object.prototype.toString.call(arguments[arguments.length - 1]) === '[object Function]') {
+                          extra_args = Array.prototype.slice.call(arguments, 1, -1);
+                          cb = arguments[arguments.length - 1];
+                        } else {
+                          pageEvaluateDeprecatedFn();
+                          extra_args = Array.prototype.slice.call(arguments, 2);
+                        }
                     }
                     request_queue.push([[id, 'evaluate', fn.toString()].concat(extra_args), callbackOrDummy(cb, poll_func)]);
                 },
-                waitForSelector: function (selector, cb, timeout) {
+                waitForSelector: function (selector, timeout, cb) {
+                    if (cb && Object.prototype.toString.call(timeout) === '[object Function]') {
+                      pageWaitForSelectorDeprecatedFn();
+
+                      var tmp = cb;
+
+                      cb = timeout;
+                      timeout = tmp;
+                    }
+
+                    if (!cb) {
+                      cb = timeout;
+                      // Default timeout is 10 sec
+                      timeout = 10000;
+                    }
+
                     var startTime = Date.now();
                     var timeoutInterval = 150;
                     var testRunning = false;
@@ -269,7 +306,7 @@ exports.create = function (callback, options) {
 
                         page.evaluate(function (selector) {
                             return document.querySelectorAll(selector).length;
-                        }, function (err, result) {
+                        }, selector, function (err, result) {
                             testRunning = false;
                             if (result > 0) {//selector found
                                 cb();
@@ -277,10 +314,9 @@ exports.create = function (callback, options) {
                             else {
                                 setTimeout(testForSelector, timeoutInterval);
                             }
-                        }, selector);
+                        });
                     };
 
-                    timeout = timeout || 10000; //default timeout is 10 sec;
                     setTimeout(testForSelector, timeoutInterval);
                 },
             };
