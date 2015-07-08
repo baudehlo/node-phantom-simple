@@ -3,25 +3,15 @@
 
 var http    = require('http');
 var fs      = require('fs');
-var path    = require('path');
 var assert  = require('assert');
-var crypto  = require('crypto');
 var helpers = require('./helpers');
 var driver  = require('../');
 
 
 describe('page', function () {
   var server;
+  var testFileName = helpers.tmp();
 
-  var testFilename = helpers.tmp();
-  var verifyFilename = path.join(__dirname, 'fixtures', 'verifyrender.png');
-
-  function fileHash(filename) {
-    var shasum = crypto.createHash('sha256');
-    var f = fs.readFileSync(filename);
-    shasum.update(f);
-    return shasum.digest('hex');
-  }
 
   before(function (done) {
     server = http.createServer(function (request, response) {
@@ -30,7 +20,8 @@ describe('page', function () {
     }).listen(done);
   });
 
-  it.skip('render', function (done) {
+
+  it('render to binary & base64', function (done) {
     driver.create(function (err, browser) {
       if (err) {
         done(err);
@@ -50,19 +41,35 @@ describe('page', function () {
           }
 
           assert.equal(status, 'success');
-          page.render(testFilename, function (err) {
+
+          page.render(testFileName, function (err) {
             if (err) {
               done(err);
               return;
             }
 
-            assert.equal(fileHash(testFilename), fileHash(verifyFilename));
-            helpers.unlink(testFilename); //clean up the testfile
+            var stat = fs.statSync(testFileName);
 
-            browser.on('exit', function () {
-              done();
+            // Relaxed check to work in any browser/OS
+            // We should have image and this image should be > 0 bytes.
+            assert.ok(stat.size > 100, 'generated image too small');
+
+
+            page.renderBase64('png', function (err, imagedata) {
+              if (err) {
+                done(err);
+                return;
+              }
+
+              // Base64 decoded image should be the same (check size only)
+              assert.equal((new Buffer(imagedata, 'base64')).length, stat.size);
+
+
+              browser.on('exit', function () {
+                done();
+              });
+              browser.exit();
             });
-            browser.exit();
           });
         });
       });
@@ -72,7 +79,9 @@ describe('page', function () {
     });
   });
 
+
   after(function (done) {
+    helpers.unlink(testFileName);
     server.close(done);
   });
 });
