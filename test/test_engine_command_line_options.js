@@ -52,7 +52,7 @@ describe('engine', function () {
     }).listen(done);
   });
 
-  it('command line options', function (done) {
+  it.skip('command line options', function (done) {
     if (os.platform() === 'darwin') {
       this.skip(); // Proxy doesn't work on OSX
     }

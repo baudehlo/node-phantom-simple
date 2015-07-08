@@ -30,7 +30,7 @@ describe('page', function () {
     }).listen(done);
   });
 
-  it('render', function (done) {
+  it.skip('render', function (done) {
     driver.create(function (err, browser) {
       if (err) {
         done(err);

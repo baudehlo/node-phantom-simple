@@ -33,7 +33,7 @@ describe('page', function () {
     }).listen(done);
   });
 
-  it('render base64', function (done) {
+  it.skip('render base64', function (done) {
     driver.create(function (err, browser) {
       if (err) {
         done(err);
