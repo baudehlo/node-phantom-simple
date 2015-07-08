@@ -6,7 +6,7 @@ var driver  = require('../');
 
 
 describe('engine', function () {
-  it.skip('unexpected exit', function (done) {
+  it('unexpected exit', function (done) {
     driver.create(function (err, browser) {
       if (err) {
         done(err);
@@ -14,7 +14,13 @@ describe('engine', function () {
       }
 
       browser.createPage(function (err, page) {
+        if (err) {
+          done(err);
+          return;
+        }
+
         browser.exit();  // exit the phantom process at a strange time
+
         page.open('http://www.google.com', function (err) {
           assert.ok(!!err); // we expect an error
           done();

@@ -357,6 +357,7 @@ exports.create = function (callback, options) {
             req.on('error', function (err) {
                 // If phantom already killed by `exit` command - callback without error
                 if (phantom.killed) {
+                  next();
                   callback();
                   return;
                 }
