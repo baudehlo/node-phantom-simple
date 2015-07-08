@@ -61,8 +61,13 @@ function wrapArray(arr) {
     return (arr instanceof Array) ? arr : [arr];
 }
 
-exports.create = function (callback, options) {
-    if (options === undefined) options = {};
+exports.create = function (options, callback) {
+    if (typeof options === 'function') {
+        callback = options;
+        options = {};
+    }
+    options = options || {};
+    callback = callbackOrDummy(callback);
     if (options.phantomPath === undefined) options.phantomPath = 'phantomjs';
     if (options.parameters === undefined) options.parameters = {};
 
@@ -246,14 +251,24 @@ exports.create = function (callback, options) {
                     request_queue.push([[id, 'setProperty', name, val], callbackOrDummy(cb, poll_func)]);
                 },
                 evaluate: function (fn, cb) {
-                    var extra_args = [];
-                    if (arguments.length > 2) {
-                        extra_args = Array.prototype.slice.call(arguments, 2);
+                    var extra_args = []
+                      , cb = false
+                    if (arguments.length > 1) {
+                        // convert arguments into a reall boy
+                        var extra_args = Array.prototype.slice.call(arguments, 1)
+                        if (extra_args.length && typeof extra_args[extra_args.length - 1] === 'function') {
+                            // get the callback
+                            cb = extra_args.pop(cb)
+                        }
                         // console.log("Extra args: " + extra_args);
                     }
-                    request_queue.push([[id, 'evaluate', fn.toString()].concat(extra_args), callbackOrDummy(cb, poll_func)]);
+                    request_queue
+                      .push([[id
+                            , 'evaluate'
+                            , fn.toString()].concat(extra_args)
+                            , callbackOrDummy(cb, poll_func)]);
                 },
-                waitForSelector: function (selector, cb, timeout) {
+                waitForSelector: function (selector, timeout, cb) {
                     var startTime = Date.now();
                     var timeoutInterval = 150;
                     var testRunning = false;
@@ -279,6 +294,10 @@ exports.create = function (callback, options) {
                         }, selector);
                     };
 
+                    if (typeof timeout === 'function') {
+                        cb = timeout
+                        timeout = false // default set below
+                    }
                     timeout = timeout || 10000; //default timeout is 10 sec;
                     setTimeout(testForSelector, timeoutInterval);
                 },

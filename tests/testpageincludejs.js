@@ -19,7 +19,8 @@ module.exports = {
         server.close(cb);
     },
     testPhantomPageEvaluate: function (test) {
-        phantom.create(function (error, ph) {
+        phantom.create({ignoreErrorPattern: /CoreText performance note/}
+        , function (error, ph) {
             test.ifError(error, "phantom error");
             ph.createPage(function (err, page) {
                 test.ifError(err, "createPage error");
@@ -42,6 +43,6 @@ module.exports = {
                     });
                 });
             });
-        }, {ignoreErrorPattern: /CoreText performance note/});
+        });
     },
 };
