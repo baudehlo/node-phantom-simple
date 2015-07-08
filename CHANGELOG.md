@@ -2,10 +2,17 @@
 ------------------
 
 - Added SlimerJS support.
+- Moved callbacks to last position in all functions.
+  - old style format still works but shows deprecation message.
 - Added FreeBSD support.
+- Added dot notation support for nested properties in `.set` / `.get`.
+- Defined missed `onResourceTimeout` handler.
+- Defined `onAuthPrompt` handler, specific to SlimerJS.
 - Fixed Win32 support.
-- Return proper errors when PhantomJS process dies.
+- Fixed Yosemite support with multiname localhost aliases.
+- Return proper errors when PhantomJS / SlimerJS process dies.
 - Fixed `waitForSelector` callback result.
+- Rewritten tests & automated testing.
 
 
 1.2.0 / 2014-03-19
