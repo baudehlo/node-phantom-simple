@@ -1,5 +1,6 @@
 "use strict";
 
+var HeadlessError   = require('./headless_error');
 var http            = require('http');
 var spawn 			= require('child_process').spawn;
 var exec            = require('child_process').exec;
@@ -124,7 +125,7 @@ exports.create = function (callback, options) {
             var matches = data.toString().match(/Ready \[(\d+)\] \[(.+?)\]/);
             if (!matches) {
                 phantom.kill();
-                return callback("Unexpected output from PhantomJS: " + data);
+                return callback(new HeadlessError("Unexpected output from PhantomJS: " + data));
             }
 
             var phantom_port = matches[2].indexOf(':') === -1 ? matches[2] : matches[2].split(':')[1];
@@ -163,7 +164,7 @@ exports.create = function (callback, options) {
                             break;
                 default:
                             phantom.kill();
-                            return callback("Your OS is not supported yet. Tell us how to get the listening port based on PID");
+                            return callback(new HeadlessError("Your OS is not supported yet. Tell us how to get the listening port based on PID"));
             }
 
             // We do this twice - first to get ports this process is listening on
@@ -189,7 +190,7 @@ exports.create = function (callback, options) {
                 exec(phantom_pid_command, function (err, stdout, stderr) {
                     if (err !== null) {
                         phantom.kill();
-                        return callback("Error executing command to extract phantom ports: " + err);
+                        return callback(new HeadlessError("Error executing command to extract phantom ports: " + err));
                     }
                     var port;
                     while (match = re.exec(stdout)) {
@@ -200,7 +201,7 @@ exports.create = function (callback, options) {
 
                     if (!port) {
                         phantom.kill();
-                        return callback("Error extracting port from: " + stdout);
+                        return callback(new HeadlessError("Error extracting port from: " + stdout));
                     }
 
                     callback(null, phantom, port);
@@ -210,7 +211,7 @@ exports.create = function (callback, options) {
 
         setTimeout(function () {    //wait a bit to see if the spawning of phantomjs immediately fails due to bad path or similar
         	if (exitCode !== 0) {
-        		return callback("Phantom immediately exited with: " + exitCode);
+        		return callback(new HeadlessError("Phantom immediately exited with: " + exitCode));
         	}
         },100);
     };
@@ -263,7 +264,7 @@ exports.create = function (callback, options) {
                         var elapsedTime = Date.now() - startTime;
 
                         if (elapsedTime > timeout) {
-                            return cb("Timeout waiting for selector: " + selector);
+                            return cb(new HeadlessError("Timeout waiting for selector: " + selector));
                         }
 
                         page.evaluate(function (selector) {
@@ -330,7 +331,7 @@ exports.create = function (callback, options) {
                     phantom.POSTING = false;
                     if (!data) {
                         next();
-                        return callback("No response body for page." + method + "()");
+                        return callback(new HeadlessError("No response body for page." + method + "()"));
                     }
                     var results = JSON.parse(data);
                     // console.log("Response: ", results);
@@ -363,7 +364,7 @@ exports.create = function (callback, options) {
                 }
 
                 console.warn("Request() error evaluating " + method + "() call: " + err);
-                callback("Request() error evaluating " + method + "() call: " + err);
+                callback(new HeadlessError("Request() error evaluating " + method + "() call: " + err));
             })
 
             req.setHeader('Content-Type', 'application/json');
@@ -428,7 +429,7 @@ function setup_long_poll (phantom, port, pages, setup_new_page) {
     phantom.once('exit', function () { dead = true; });
 
     var poll_func = function (cb) {
-        if (dead) return cb('Phantom Process died');
+        if (dead) return cb(new HeadlessError('Phantom Process died'));
         if (phantom.POSTING) return cb();
         // console.log("Polling...");
         var req = http.get(http_opts, function(res) {
@@ -439,15 +440,15 @@ function setup_long_poll (phantom, port, pages, setup_new_page) {
             });
             res.on('end', function () {
                 // console.log("Poll results: " + data);
-                if (dead) return cb('Phantom Process died');
+                if (dead) return cb(new HeadlessError('Phantom Process died'));
                 try {
                     var results = JSON.parse(data);
                 }
                 catch (err) {
                     console.warn("Error parsing JSON from phantom: " + err);
                     console.warn("Data from phantom was: " + data);
-                    return cb("Error parsing JSON from phantom: " + err
-                            + "\nData from phantom was: " + data);
+                    return cb(new HeadlessError("Error parsing JSON from phantom: " + err
+                            + "\nData from phantom was: " + data));
                 }
                 // if (results.length > 0) {
                 //     console.log("Long poll results: ", results);
