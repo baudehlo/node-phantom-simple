@@ -38,7 +38,7 @@ describe('page', function () {
           assert.equal(status, 'success');
 
           page.evaluate(function () {
-            return { h1text: document.getElementsByTagName('h1')[0].innerText };
+            return { h1text: document.getElementsByTagName('h1')[0].innerHTML };
           }, function (err, result) {
             if (err) {
               done(err);
