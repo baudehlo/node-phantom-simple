@@ -138,6 +138,8 @@ var callbacks = [
 	'onAlert', 'onCallback', 'onClosing', 'onConfirm', 'onConsoleMessage', 'onError', 'onFilePicker',
 	'onInitialized', 'onLoadFinished', 'onLoadStarted', 'onNavigationRequested',
 	'onPrompt', 'onResourceRequested', 'onResourceReceived', 'onResourceTimeout', 'onResourceError', 'onUrlChanged',
+	// SlimerJS only
+	'onAuthPrompt'
 ];
 
 function setup_callbacks (id, page) {
