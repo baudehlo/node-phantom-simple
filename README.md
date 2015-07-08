@@ -1,6 +1,9 @@
 node-phantom-simple
 ===================
 
+[![Build Status](https://img.shields.io/travis/baudehlo/node-phantom-simple/master.svg?style=flat)](https://travis-ci.org/baudehlo/node-phantom-simple)
+[![NPM version](https://img.shields.io/npm/v/node-phantom-simple.svg?style=flat)](https://www.npmjs.org/package/node-phantom-simple)
+
 > A bridge between [PhantomJS](http://phantomjs.org/) / [SlimerJS](https://slimerjs.org/)
 and [Node.js](http://nodejs.org/).
 
