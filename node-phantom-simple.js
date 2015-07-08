@@ -5,6 +5,7 @@ var http            = require('http');
 var spawn 			= require('child_process').spawn;
 var exec            = require('child_process').exec;
 var util            = require('util');
+var path            = require('path');
 
 var POLL_INTERVAL   = process.env.POLL_INTERVAL || 500;
 
@@ -89,7 +90,7 @@ exports.create = function (options, callback) {
         for(var parm in options.parameters) {
             args.push('--' + parm + '=' + options.parameters[parm]);
         }
-        args = args.concat([__dirname + '/bridge.js']);
+        args = args.concat([ path.join(__dirname, 'bridge.js') ]);
 
         var phantom = spawn(options.phantomPath, args);
 
