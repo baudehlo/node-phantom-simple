@@ -17,6 +17,15 @@ describe('page.evaluate()', function () {
   });
 
 
+  // Engines are buggy and can mutate values:
+  //
+  // - SlimerJS
+  //   - undefined -> null
+  // - PhantomJS
+  //   - undefined -> null
+  //   - null -> empty string
+  //   - [ 1, undefined, 2 ] -> null
+  //
   it('should return false as boolean (#43)', function (done) {
     driver.create(function (err, browser) {
       if (err) {
