@@ -7,7 +7,9 @@
   "repository": "baudehlo/node-phantom-simple",
   "main": "node-phantom-simple.js",
   "scripts": {
-    "test": "./node_modules/.bin/mocha"
+    "test": "npm run test-phantom && npm run test-slimer",
+    "test-phantom": "./node_modules/.bin/mocha",
+    "test-slimer": "ENGINE=slimerjs ./node_modules/.bin/mocha"
   },
   "devDependencies": {
     "mocha": "^2.2.5",
