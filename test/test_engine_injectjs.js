@@ -2,6 +2,8 @@
 
 
 var path    = require('path');
+var assert  = require('assert');
+var helpers = require('./helpers');
 var driver  = require('../');
 
 
@@ -13,14 +15,19 @@ describe('engine', function () {
         return;
       }
 
-      browser.injectJs(path.join('fixtures', 'injecttest.js'), function (err) {
+      var filePath = helpers.toTmp(path.join(__dirname, 'fixtures', 'injecttest.js'));
+
+      browser.injectJs(filePath, function (err, result) {
+        helpers.unlink(filePath);
+
         if (err) {
           done(err);
           return;
         }
 
-        browser.exit();
-        done();
+        assert.ok(result);
+
+        browser.exit(done);
       });
     }, { phantomPath: require(process.env.ENGINE || 'phantomjs').path });
   });
