@@ -50,7 +50,7 @@ describe('page', function () {
           }
 
           assert.ok(localMsg === undefined);
-          assert.equal(messageForwardedByOnConsoleMessage, "handled on phantom-side");
+          assert.ok(/handled on phantom-side/.test(String(messageForwardedByOnConsoleMessage)));
 
           browser.on('exit', function () {
             done();
