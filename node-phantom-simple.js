@@ -66,6 +66,7 @@ function wrapArray(arr) {
 var pageEvaluateDeprecatedFn = util.deprecate(function () {}, "Deprecated 'page.evaluate(fn, callback, args...)' syntax - use 'page.evaluate(fn, args..., callback)' instead");
 var createDeprecatedFn = util.deprecate(function () {}, "Deprecated '.create(callback, options)' syntax - use '.create(options, callback)' instead");
 var pageWaitForSelectorDeprecatedFn = util.deprecate(function () {}, "Deprecated 'page.waitForSelector(selector, callback, timeout)' syntax - use 'page.waitForSelector(selector, timeout, callback)' instead");
+var phantomPathDeprecatedFn = util.deprecate(function () {}, "Deprecated 'phantomPath' option - use 'path' instead");
 
 exports.create = function (options, callback) {
     if (callback && Object.prototype.toString.call(options) === '[object Function]') {
@@ -82,7 +83,15 @@ exports.create = function (options, callback) {
       options = {};
     }
 
-    if (options.phantomPath === undefined) options.phantomPath = 'phantomjs';
+    if (options.phantomPath) {
+      phantomPathDeprecatedFn();
+      options.path = options.phantomPath;
+    }
+
+    if (!options.path) {
+      options.path = 'phantomjs';
+    }
+
     if (options.parameters === undefined) options.parameters = {};
 
     function spawnPhantom (callback) {
@@ -92,7 +101,7 @@ exports.create = function (options, callback) {
         }
         args = args.concat([ path.join(__dirname, 'bridge.js') ]);
 
-        var phantom = spawn(options.phantomPath, args);
+        var phantom = spawn(options.path, args);
 
         // Ensure that the child process is closed when this process dies
         var closeChild = function () {
