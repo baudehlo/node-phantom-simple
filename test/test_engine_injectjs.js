@@ -9,7 +9,7 @@ var driver  = require('../');
 
 describe('engine', function () {
   it('injectjs', function (done) {
-    driver.create(function (err, browser) {
+    driver.create({ path: require(process.env.ENGINE || 'phantomjs').path }, function (err, browser) {
       if (err) {
         done(err);
         return;
@@ -29,6 +29,6 @@ describe('engine', function () {
 
         browser.exit(done);
       });
-    }, { phantomPath: require(process.env.ENGINE || 'phantomjs').path });
+    });
   });
 });

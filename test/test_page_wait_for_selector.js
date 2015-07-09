@@ -24,7 +24,7 @@ describe('page.waitForSelector()', function () {
 
 
   it('callback is last', function (done) {
-    driver.create({ phantomPath: require(process.env.ENGINE || 'phantomjs').path }, function (err, browser) {
+    driver.create({ path: require(process.env.ENGINE || 'phantomjs').path }, function (err, browser) {
       if (err) {
         done(err);
         return;
@@ -59,7 +59,7 @@ describe('page.waitForSelector()', function () {
 
 
   it('callback without timeout', function (done) {
-    driver.create({ phantomPath: require(process.env.ENGINE || 'phantomjs').path }, function (err, browser) {
+    driver.create({ path: require(process.env.ENGINE || 'phantomjs').path }, function (err, browser) {
       if (err) {
         done(err);
         return;
@@ -94,7 +94,7 @@ describe('page.waitForSelector()', function () {
 
 
   it('callback before timeout (legacy style)', function (done) {
-    driver.create({ phantomPath: require(process.env.ENGINE || 'phantomjs').path }, function (err, browser) {
+    driver.create({ path: require(process.env.ENGINE || 'phantomjs').path }, function (err, browser) {
       if (err) {
         done(err);
         return;

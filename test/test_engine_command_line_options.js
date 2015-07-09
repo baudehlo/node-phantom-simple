@@ -7,7 +7,7 @@ var driver  = require('../');
 
 describe('command line options', function () {
   it('load-images is default', function (done) {
-    driver.create(function (err, browser) {
+    driver.create({ path: require(process.env.ENGINE || 'phantomjs').path }, function (err, browser) {
       if (err) {
         callback(err);
         return;
@@ -23,56 +23,53 @@ describe('command line options', function () {
 
         browser.exit(done);
       });
-    }, {
-      phantomPath: require(process.env.ENGINE || 'phantomjs').path
     });
   });
 
 
   it('load-images is true', function (done) {
-    driver.create(function (err, browser) {
-      if (err) {
-        callback(err);
-        return;
-      }
-
-      browser.get('defaultPageSettings.loadImages', function (err, loadImages) {
+    driver.create(
+      { parameters: { 'load-images': true }, path: require(process.env.ENGINE || 'phantomjs').path },
+      function (err, browser) {
         if (err) {
           callback(err);
           return;
         }
 
-        assert.equal(loadImages, true);
+        browser.get('defaultPageSettings.loadImages', function (err, loadImages) {
+          if (err) {
+            callback(err);
+            return;
+          }
 
-        browser.exit(done);
-      });
-    }, {
-      parameters: { 'load-images': true },
-      phantomPath: require(process.env.ENGINE || 'phantomjs').path
-    });
+          assert.equal(loadImages, true);
+
+          browser.exit(done);
+        });
+      }
+    );
   });
 
 
   it('load-images is false', function (done) {
-    driver.create(function (err, browser) {
-      if (err) {
-        callback(err);
-        return;
-      }
-
-      browser.get('defaultPageSettings.loadImages', function (err, loadImages) {
+    driver.create({ parameters: { 'load-images': false }, path: require(process.env.ENGINE || 'phantomjs').path },
+      function (err, browser) {
         if (err) {
           callback(err);
           return;
         }
 
-        assert.equal(!!loadImages, false);
+        browser.get('defaultPageSettings.loadImages', function (err, loadImages) {
+          if (err) {
+            callback(err);
+            return;
+          }
 
-        browser.exit(done);
-      });
-    }, {
-      parameters: { 'load-images': false },
-      phantomPath: require(process.env.ENGINE || 'phantomjs').path
-    });
+          assert.equal(loadImages, false);
+
+          browser.exit(done);
+        });
+      }
+    );
   });
 });

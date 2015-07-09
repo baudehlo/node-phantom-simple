@@ -27,58 +27,58 @@ describe('page', function () {
   });
 
   it('uploadFile', function (done) {
-    driver.create(function (err, browser) {
-      if (err) {
-        done(err);
-        return;
-      }
-
-      browser.createPage(function (err, page) {
+    driver.create(
+      { ignoreErrorPattern: /CoreText performance note/, path: require(process.env.ENGINE || 'phantomjs').path },
+      function (err, browser) {
         if (err) {
           done(err);
           return;
         }
 
-        page.open('http://localhost:' + server.address().port, function (err, status) {
+        browser.createPage(function (err, page) {
           if (err) {
             done(err);
             return;
           }
 
-          assert.equal(status, 'success');
-
-          var filePath = helpers.toTmp(path.join(__dirname, 'fixtures', 'uploadtest.txt'));
-
-          page.uploadFile('input[name=test]', filePath, function (err) {
+          page.open('http://localhost:' + server.address().port, function (err, status) {
             if (err) {
-              helpers.unlink(filePath);
               done(err);
               return;
             }
 
-            page.evaluate(function () {
-              document.forms['testform'].submit();
-            }, function (err) {
+            assert.equal(status, 'success');
+
+            var filePath = helpers.toTmp(path.join(__dirname, 'fixtures', 'uploadtest.txt'));
+
+            page.uploadFile('input[name=test]', filePath, function (err) {
               if (err) {
                 helpers.unlink(filePath);
                 done(err);
                 return;
               }
 
-              setTimeout(function () {
-                assert.ok(gotFile);
+              page.evaluate(function () {
+                document.forms['testform'].submit();
+              }, function (err) {
+                if (err) {
+                  helpers.unlink(filePath);
+                  done(err);
+                  return;
+                }
 
-                helpers.unlink(filePath);
-                browser.exit(done);
-              }, 100);
+                setTimeout(function () {
+                  assert.ok(gotFile);
+
+                  helpers.unlink(filePath);
+                  browser.exit(done);
+                }, 100);
+              });
             });
           });
         });
-      });
-    }, {
-      ignoreErrorPattern: /CoreText performance note/,
-      phantomPath: require(process.env.ENGINE || 'phantomjs').path
-    });
+      }
+    );
   });
 
   after(function (done) {

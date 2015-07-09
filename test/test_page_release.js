@@ -8,7 +8,7 @@ var driver  = require('../');
 
 describe('page', function () {
   it('release', function (done) {
-    driver.create(function (err, browser) {
+    driver.create({ path: require(process.env.ENGINE || 'phantomjs').path }, function (err, browser) {
       if (err) {
         done(err);
         return;
@@ -22,6 +22,6 @@ describe('page', function () {
           browser.exit(done);
         });
       });
-    }, { phantomPath: require(process.env.ENGINE || 'phantomjs').path });
+    });
   });
 });

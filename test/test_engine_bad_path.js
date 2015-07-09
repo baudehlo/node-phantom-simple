@@ -7,17 +7,17 @@ var driver = require('../');
 
 describe('bad path', function () {
   it('bad path produces an error', function (done) {
-    driver.create(function (err) {
+    driver.create({ path: '@@@', ignoreErrorPattern: /execvp/ }, function (err) {
       assert.notEqual(null, err);
       done();
-    }, { path: '@@@', ignoreErrorPattern: /execvp/ });
+    });
   });
 
 
   it('deprecated path name still should be ok', function (done) {
-    driver.create(function (err) {
+    driver.create({ phantomPath: '@@@', ignoreErrorPattern: /execvp/ }, function (err) {
       assert.notEqual(null, err, 'Bad path produces an error');
       done();
-    }, { phantomPath: '@@@', ignoreErrorPattern: /execvp/ });
+    });
   });
 });

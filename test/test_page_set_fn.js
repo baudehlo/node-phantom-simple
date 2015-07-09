@@ -19,46 +19,46 @@ describe('page', function () {
   it('setFn', function (done) {
     var url = 'http://localhost:' + server.address().port + '/';
 
-    driver.create(function (err, browser) {
-      if (err) {
-        done(err);
-        return;
-      }
-
-      browser.createPage(function (err, page) {
+    driver.create(
+      { ignoreErrorPattern: /CoreText performance note/, path: require(process.env.ENGINE || 'phantomjs').path },
+      function (err, browser) {
         if (err) {
           done(err);
           return;
         }
 
-        var messageForwardedByOnConsoleMessage = undefined;
-        var localMsg = undefined;
-
-        page.onConsoleMessage = function (msg) {
-          messageForwardedByOnConsoleMessage = msg;
-        };
-
-        page.setFn('onCallback', function (msg) {
-          localMsg = msg;
-          page.onConsoleMessage(msg);
-        });
-
-        page.open(url, function (err) {
+        browser.createPage(function (err, page) {
           if (err) {
             done(err);
             return;
           }
 
-          assert.ok(localMsg === undefined);
-          assert.ok(/handled on phantom-side/.test(String(messageForwardedByOnConsoleMessage)));
+          var messageForwardedByOnConsoleMessage = undefined;
+          var localMsg = undefined;
 
-          browser.exit(done);
+          page.onConsoleMessage = function (msg) {
+            messageForwardedByOnConsoleMessage = msg;
+          };
+
+          page.setFn('onCallback', function (msg) {
+            localMsg = msg;
+            page.onConsoleMessage(msg);
+          });
+
+          page.open(url, function (err) {
+            if (err) {
+              done(err);
+              return;
+            }
+
+            assert.ok(localMsg === undefined);
+            assert.ok(/handled on phantom-side/.test(String(messageForwardedByOnConsoleMessage)));
+
+            browser.exit(done);
+          });
         });
-      });
-    }, {
-      ignoreErrorPattern: /CoreText performance note/,
-      phantomPath: require(process.env.ENGINE || 'phantomjs').path
-    });
+      }
+    );
   });
 
   after(function (done) {

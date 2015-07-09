@@ -20,7 +20,7 @@ describe('engine.create()', function () {
 
 
   it('callback is last', function (done) {
-    driver.create({ phantomPath: require(process.env.ENGINE || 'phantomjs').path }, function (err, browser) {
+    driver.create({ path: require(process.env.ENGINE || 'phantomjs').path }, function (err, browser) {
       if (err) {
         done(err);
         return;
@@ -39,6 +39,6 @@ describe('engine.create()', function () {
       }
 
       browser.exit(done);
-    }, { phantomPath: require(process.env.ENGINE || 'phantomjs').path });
+    }, { path: require(process.env.ENGINE || 'phantomjs').path });
   });
 });

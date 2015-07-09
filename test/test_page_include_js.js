@@ -23,52 +23,52 @@ describe('page', function () {
   });
 
   it('includeJs', function (done) {
-    driver.create(function (err, browser) {
-      if (err) {
-        done(err);
-        return;
-      }
-
-      browser.createPage(function (err, page) {
+    driver.create(
+      { ignoreErrorPattern: /CoreText performance note/, path: require(process.env.ENGINE || 'phantomjs').path },
+      function (err, browser) {
         if (err) {
           done(err);
           return;
         }
 
-        page.open('http://localhost:' + server.address().port, function (err, status) {
+        browser.createPage(function (err, page) {
           if (err) {
             done(err);
             return;
           }
 
-          assert.equal(status, 'success', 'Status is success');
-
-          page.includeJs('http://localhost:' + server.address().port + '/test.js', function (err) {
+          page.open('http://localhost:' + server.address().port, function (err, status) {
             if (err) {
               done(err);
               return;
             }
 
-            page.evaluate(function () {
-              return [document.getElementsByTagName('h1')[0].innerText, document.getElementsByTagName('script').length];
-            }, function (err, result) {
+            assert.equal(status, 'success', 'Status is success');
+
+            page.includeJs('http://localhost:' + server.address().port + '/test.js', function (err) {
               if (err) {
                 done(err);
                 return;
               }
 
-              assert.equal(result[0], 'Hello Test', 'Script was executed');
-              assert.equal(result[1], 1, 'Added a new script tag');
+              page.evaluate(function () {
+                return [document.getElementsByTagName('h1')[0].innerText, document.getElementsByTagName('script').length];
+              }, function (err, result) {
+                if (err) {
+                  done(err);
+                  return;
+                }
 
-              browser.exit(done);
+                assert.equal(result[0], 'Hello Test', 'Script was executed');
+                assert.equal(result[1], 1, 'Added a new script tag');
+
+                browser.exit(done);
+              });
             });
           });
         });
-      });
-    }, {
-      ignoreErrorPattern: /CoreText performance note/,
-      phantomPath: require(process.env.ENGINE || 'phantomjs').path
-    });
+      }
+    );
   });
 
   after(function (done) {

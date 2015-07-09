@@ -22,57 +22,57 @@ describe('page', function () {
 
 
   it('render to binary & base64', function (done) {
-    driver.create(function (err, browser) {
-      if (err) {
-        done(err);
-        return;
-      }
-
-      browser.createPage(function (err, page) {
+    driver.create(
+      { ignoreErrorPattern: /CoreText performance note/, path: require(process.env.ENGINE || 'phantomjs').path },
+      function (err, browser) {
         if (err) {
           done(err);
           return;
         }
 
-        page.open('http://localhost:' + server.address().port, function (err, status) {
+        browser.createPage(function (err, page) {
           if (err) {
             done(err);
             return;
           }
 
-          assert.equal(status, 'success');
-
-          page.render(testFileName, function (err) {
+          page.open('http://localhost:' + server.address().port, function (err, status) {
             if (err) {
               done(err);
               return;
             }
 
-            var stat = fs.statSync(testFileName);
+            assert.equal(status, 'success');
 
-            // Relaxed check to work in any browser/OS
-            // We should have image and this image should be > 0 bytes.
-            assert.ok(stat.size > 100, 'generated image too small');
-
-
-            page.renderBase64('png', function (err, imagedata) {
+            page.render(testFileName, function (err) {
               if (err) {
                 done(err);
                 return;
               }
 
-              // Base64 decoded image should be the same (check size only)
-              assert.equal((new Buffer(imagedata, 'base64')).length, stat.size);
+              var stat = fs.statSync(testFileName);
 
-              browser.exit(done);
+              // Relaxed check to work in any browser/OS
+              // We should have image and this image should be > 0 bytes.
+              assert.ok(stat.size > 100, 'generated image too small');
+
+
+              page.renderBase64('png', function (err, imagedata) {
+                if (err) {
+                  done(err);
+                  return;
+                }
+
+                // Base64 decoded image should be the same (check size only)
+                assert.equal((new Buffer(imagedata, 'base64')).length, stat.size);
+
+                browser.exit(done);
+              });
             });
           });
         });
-      });
-    }, {
-      ignoreErrorPattern: /CoreText performance note/,
-      phantomPath: require(process.env.ENGINE || 'phantomjs').path
-    });
+      }
+    );
   });
 
 

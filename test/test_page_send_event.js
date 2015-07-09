@@ -17,50 +17,50 @@ describe('page', function () {
   });
 
   it('send event', function (done) {
-    driver.create(function (err, browser) {
-      if (err) {
-        done(err);
-        return;
-      }
-
-      browser.createPage(function (err, page) {
+    driver.create(
+      { ignoreErrorPattern: /CoreText performance note/, path: require(process.env.ENGINE || 'phantomjs').path },
+      function (err, browser) {
         if (err) {
           done(err);
           return;
         }
 
-        page.open('http://localhost:' + server.address().port, function (err, status) {
+        browser.createPage(function (err, page) {
           if (err) {
             done(err);
             return;
           }
 
-          assert.equal(status, 'success');
-          page.sendEvent('click', 30, 20, function (err) {
+          page.open('http://localhost:' + server.address().port, function (err, status) {
             if (err) {
               done(err);
               return;
             }
 
-            page.evaluate(function () {
-              return document.getElementsByTagName('h1')[0].innerText;
-            }, function (err, result) {
+            assert.equal(status, 'success');
+            page.sendEvent('click', 30, 20, function (err) {
               if (err) {
                 done(err);
                 return;
               }
 
-              assert.equal(result, 'Hello Test');
+              page.evaluate(function () {
+                return document.getElementsByTagName('h1')[0].innerText;
+              }, function (err, result) {
+                if (err) {
+                  done(err);
+                  return;
+                }
 
-              browser.exit(done);
+                assert.equal(result, 'Hello Test');
+
+                browser.exit(done);
+              });
             });
           });
         });
-      });
-    }, {
-      ignoreErrorPattern: /CoreText performance note/,
-      phantomPath: require(process.env.ENGINE || 'phantomjs').path
-    });
+      }
+    );
   });
 
   after(function (done) {

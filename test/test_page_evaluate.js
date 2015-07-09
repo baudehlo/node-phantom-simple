@@ -18,7 +18,7 @@ describe('page.evaluate()', function () {
 
 
   it('should return false as boolean (#43)', function (done) {
-    driver.create(function (err, browser) {
+    driver.create({ path: require(process.env.ENGINE || 'phantomjs').path }, function (err, browser) {
       if (err) {
         done(err);
         return;
@@ -61,137 +61,135 @@ describe('page.evaluate()', function () {
           });
         });
       });
-    }, {
-      phantomPath: require(process.env.ENGINE || 'phantomjs').path
     });
   });
 
 
   it('without extra args', function (done) {
-    driver.create(function (err, browser) {
-      if (err) {
-        done(err);
-        return;
-      }
-
-      browser.createPage(function (err, page) {
+    driver.create(
+      { path: require(process.env.ENGINE || 'phantomjs').path, ignoreErrorPattern: /CoreText performance note/ },
+      function (err, browser) {
         if (err) {
           done(err);
           return;
         }
 
-        page.open('http://localhost:' + server.address().port, function (err, status) {
+        browser.createPage(function (err, page) {
           if (err) {
             done(err);
             return;
           }
 
-          assert.equal(status, 'success');
-
-          page.evaluate(function () {
-            return { h1text: document.getElementsByTagName('h1')[0].innerHTML };
-          }, function (err, result) {
+          page.open('http://localhost:' + server.address().port, function (err, status) {
             if (err) {
               done(err);
               return;
             }
 
-            assert.equal(result.h1text, 'Hello World');
+            assert.equal(status, 'success');
 
-            browser.exit(done);
+            page.evaluate(function () {
+              return { h1text: document.getElementsByTagName('h1')[0].innerHTML };
+            }, function (err, result) {
+              if (err) {
+                done(err);
+                return;
+              }
+
+              assert.equal(result.h1text, 'Hello World');
+
+              browser.exit(done);
+            });
           });
         });
-      });
-    }, {
-      ignoreErrorPattern: /CoreText performance note/,
-      phantomPath: require(process.env.ENGINE || 'phantomjs').path
-    });
+      }
+    );
   });
 
 
   it('with extra args, callback is last', function (done) {
-    driver.create(function (err, browser) {
-      if (err) {
-        done(err);
-        return;
-      }
-
-      browser.createPage(function (err, page) {
+    driver.create(
+      { path: require(process.env.ENGINE || 'phantomjs').path, ignoreErrorPattern: /CoreText performance note/ },
+      function (err, browser) {
         if (err) {
           done(err);
           return;
         }
 
-        page.open('http://localhost:' + server.address().port, function (err, status) {
+        browser.createPage(function (err, page) {
           if (err) {
             done(err);
             return;
           }
 
-          assert.equal(status, 'success');
-
-          page.evaluate(function (a, b, c) {
-            return { h1text: document.getElementsByTagName('h1')[0].innerHTML, abc: a + b + c };
-          }, 'a', 'b', 'c', function (err, result) {
+          page.open('http://localhost:' + server.address().port, function (err, status) {
             if (err) {
               done(err);
               return;
             }
 
-            assert.equal(result.h1text, 'Hello World');
-            assert.equal(result.abc, 'abc');
+            assert.equal(status, 'success');
 
-            browser.exit(done);
+            page.evaluate(function (a, b, c) {
+              return { h1text: document.getElementsByTagName('h1')[0].innerHTML, abc: a + b + c };
+            }, 'a', 'b', 'c', function (err, result) {
+              if (err) {
+                done(err);
+                return;
+              }
+
+              assert.equal(result.h1text, 'Hello World');
+              assert.equal(result.abc, 'abc');
+
+              browser.exit(done);
+            });
           });
         });
-      });
-    }, {
-      ignoreErrorPattern: /CoreText performance note/,
-      phantomPath: require(process.env.ENGINE || 'phantomjs').path
-    });
+      }
+    );
   });
 
 
   it('with extra args (legacy style)', function (done) {
-    driver.create(function (err, browser) {
-      if (err) {
-        done(err);
-        return;
-      }
-
-      browser.createPage(function (err, page) {
+    driver.create(
+      { path: require(process.env.ENGINE || 'phantomjs').path, ignoreErrorPattern: /CoreText performance note/ },
+      function (err, browser) {
         if (err) {
           done(err);
           return;
         }
 
-        page.open('http://localhost:' + server.address().port, function (err, status) {
+        browser.createPage(function (err, page) {
           if (err) {
             done(err);
             return;
           }
 
-          assert.equal(status, 'success');
-
-          page.evaluate(function (a, b, c) {
-            return { h1text: document.getElementsByTagName('h1')[0].innerHTML, abc: a + b + c };
-          }, function (err, result) {
+          page.open('http://localhost:' + server.address().port, function (err, status) {
             if (err) {
               done(err);
               return;
             }
 
-            assert.equal(result.h1text, 'Hello World');
-            assert.equal(result.abc, 'abc');
+            assert.equal(status, 'success');
 
-            browser.exit(done);
-          }, 'a', 'b', 'c');
+            page.evaluate(function (a, b, c) {
+              return { h1text: document.getElementsByTagName('h1')[0].innerHTML, abc: a + b + c };
+            }, function (err, result) {
+              if (err) {
+                done(err);
+                return;
+              }
+
+              assert.equal(result.h1text, 'Hello World');
+              assert.equal(result.abc, 'abc');
+
+              browser.exit(done);
+            }, 'a', 'b', 'c');
+          });
         });
-      });
-    }, {
-      ignoreErrorPattern: /CoreText performance note/,
-      phantomPath: require(process.env.ENGINE || 'phantomjs').path
-    });
+      }
+    );
   });
 
 
