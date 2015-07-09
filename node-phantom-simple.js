@@ -92,6 +92,10 @@ exports.create = function (options, callback) {
         }
         args = args.concat([ path.join(__dirname, 'bridge.js') ]);
 
+        if (options.webserverPort) {
+            args.push(options.webserverPort);
+        }
+        
         var phantom = spawn(options.phantomPath, args);
 
         // Ensure that the child process is closed when this process dies
@@ -152,6 +156,10 @@ exports.create = function (options, callback) {
             if (phantom_port !== 0) {
               callback(null, phantom, phantom_port);
               return;
+            }
+
+            if (options.webserverPort) {
+                return callback(null, phantom, options.webserverPort);
             }
 
             var phantom_pid = parseInt(matches[1], 0);
