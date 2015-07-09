@@ -384,7 +384,7 @@ exports.create = function (options, callback) {
                     var results;
 
                     try {
-                      results = JSON.parse(data);
+                      results = JSON.parse(data).data;
                     } catch (error) {
                       // If method is exit - response may be broken, because server could be stopped while sending
                       if (method === 'exit') {
@@ -504,7 +504,7 @@ function setup_long_poll (phantom, port, pages, setup_new_page) {
                 // console.log("Poll results: " + data);
                 if (dead) return cb(new HeadlessError('Phantom Process died'));
                 try {
-                    var results = JSON.parse(data);
+                    var results = JSON.parse(data).data;
                 }
                 catch (err) {
                     console.warn("Error parsing JSON from phantom: " + err);

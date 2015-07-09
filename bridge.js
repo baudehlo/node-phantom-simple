@@ -49,7 +49,7 @@ function page_open (res, page, args) {
 	page.open.apply(page, args.concat(function (success) {
 		res.statusCode = 200;
 		res.setHeader('Content-Type', 'application/json');
-		res.write(JSON.stringify(success));
+		res.write(JSON.stringify({ data: success }));
 		// console.log("Close1");
 		res.close();
 	}))
@@ -58,7 +58,7 @@ function page_open (res, page, args) {
 function include_js (res, page, args) {
 	res.statusCode = 200;
 	res.setHeader('Content-Type', 'application/json');
-	res.write('"success"');
+	res.write(JSON.stringify({ data: 'success' }));
 	// console.log("Calling includeJs");
 	var response = page.includeJs.apply(page, args.concat(function () {
 		// console.log("Came back...");
@@ -81,7 +81,7 @@ var service = webserver.listen('127.0.0.1:0', function (req, res) {
 		res.statusCode = 200;
 		res.setHeader('Content-Type', 'application/json');
 		// console.log("Sending back " + callback_stack.length + " callbacks");
-		res.write(JSON.stringify(callback_stack));
+		res.write(JSON.stringify({ data: callback_stack }));
 		callback_stack = [];
 		// console.log("Close3");
 		res.close();
@@ -130,7 +130,7 @@ var service = webserver.listen('127.0.0.1:0', function (req, res) {
 		else {
 			// console.log("Results: " + output);
 			res.statusCode = 200;
-			res.write(JSON.stringify(output || null));
+			res.write(JSON.stringify({ data: output }));
 		}
 		// console.log("Close4")
 		res.close();

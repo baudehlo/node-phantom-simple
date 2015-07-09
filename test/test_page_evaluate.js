@@ -17,6 +17,47 @@ describe('page.evaluate()', function () {
   });
 
 
+  it('should return false as boolean (#43)', function (done) {
+    driver.create(function (err, browser) {
+      if (err) {
+        done(err);
+        return;
+      }
+
+      browser.createPage(function (err, page) {
+        if (err) {
+          done(err);
+          return;
+        }
+
+        page.open('http://localhost:' + server.address().port, function (err, status) {
+          if (err) {
+            done(err);
+            return;
+          }
+
+          assert.equal(status, 'success');
+
+          page.evaluate(function () {
+            return false;
+          }, function (err, result) {
+            if (err) {
+              done(err);
+              return;
+            }
+
+            assert.strictEqual(result, false);
+
+            browser.exit(done);
+          });
+        });
+      });
+    }, {
+      phantomPath: require(process.env.ENGINE || 'phantomjs').path
+    });
+  });
+
+
   it('without extra args', function (done) {
     driver.create(function (err, browser) {
       if (err) {
