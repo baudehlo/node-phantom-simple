@@ -5,6 +5,7 @@
 - Moved callbacks to last position in all functions.
   - old style format still works but shows deprecation message.
 - Added FreeBSD support.
+- Improved Linux support - try iproute2 before net-tools.
 - Added dot notation support for nested properties in `.set` / `.get`.
 - Defined missed `onResourceTimeout` handler.
 - Defined `onAuthPrompt` handler, specific to SlimerJS.

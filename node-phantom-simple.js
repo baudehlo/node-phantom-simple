@@ -166,7 +166,9 @@ exports.create = function (options, callback) {
             var cmd = null;
             switch (platform) {
                 case 'linux':
-                            cmd = 'netstat -nlp | grep "[[:space:]]%d/"';
+                            // Modern distros usually have `iproute2` instead of `net-tools`.
+                            // Try `ss` first, then fallback to `netstat`.
+                            cmd = 'if which ss > /dev/null; then ss -nlp | grep ",%d,"; else netstat -nlp | grep "[[:space:]]%d/"; fi';
                             break;
                 case 'darwin':
                             cmd = 'lsof -np %d | grep LISTEN';
@@ -189,7 +191,7 @@ exports.create = function (options, callback) {
             // and again to get ports phantom is listening on. This is to work
             // around this bug in libuv: https://github.com/joyent/libuv/issues/962
             // - this is only necessary when using cluster, but it's here regardless
-            var my_pid_command = util.format(cmd, process.pid);
+            var my_pid_command = util.format(cmd, process.pid, process.pid);
 
             exec(my_pid_command, function (err, stdout, stderr) {
                 if (err !== null) {
@@ -198,12 +200,12 @@ exports.create = function (options, callback) {
                 }
                 var re = /(?:127\.0\.0\.1|localhost):(\d+)/ig, match;
                 var ports = [];
-                
+
                 while (match = re.exec(stdout)) {
                     ports.push(match[1]);
                 }
 
-                var phantom_pid_command = util.format(cmd, phantom_pid);
+                var phantom_pid_command = util.format(cmd, phantom_pid, phantom_pid);
 
                 exec(phantom_pid_command, function (err, stdout, stderr) {
                     if (err !== null) {
@@ -233,7 +235,7 @@ exports.create = function (options, callback) {
         	}
         },100);
     };
-    
+
     spawnPhantom(function (err, phantom, port) {
         if (err) {
             return callback(err);
