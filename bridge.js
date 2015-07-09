@@ -87,32 +87,38 @@ var service = webserver.listen('127.0.0.1:0', function (req, res) {
 		res.close();
 	}
 	else if (req.method === 'POST') {
-		var request = JSON.parse(req.post);
-		var method  = request.method;
-		var output  = null;
-		var error   = null;
-		if (request.page) {
-			if (method === 'open') { // special case this as it's the only one with a callback
-				return page_open(res, pages[request.page], request.args);
-			}
-			else if (method === 'includeJs') {
-				return include_js(res, pages[request.page], request.args);
-			}
-			try {
-				// console.log("Calling: page." + method + "(" + request.args + ")");
-				var output = pages[request.page][method].apply(pages[request.page], request.args);
-				// console.log("Got output: ", output);
-			}
-			catch (err) {
-				error = err;
-			}
+		var request, error, output;
+
+		try {
+			request = JSON.parse(req.post);
+		} catch (err) {
+			error = err;
 		}
-		else {
-			try {
-				output = global_methods[method].apply(global_methods, request.args);
+
+		if (!error) {
+			if (request.page) {
+				if (request.method === 'open') { // special case this as it's the only one with a callback
+					return page_open(res, pages[request.page], request.args);
+				}
+				else if (request.method === 'includeJs') {
+					return include_js(res, pages[request.page], request.args);
+				}
+				try {
+					// console.log("Calling: page." + method + "(" + request.args + ")");
+					output = pages[request.page][request.method].apply(pages[request.page], request.args);
+					// console.log("Got output: ", output);
+				}
+				catch (err) {
+					error = err;
+				}
 			}
-			catch (err) {
-				error = err;
+			else {
+				try {
+					output = global_methods[request.method].apply(global_methods, request.args);
+				}
+				catch (err) {
+					error = err;
+				}
 			}
 		}
 

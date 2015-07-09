@@ -366,13 +366,36 @@ exports.create = function (options, callback) {
                 });
                 res.on('end', function () {
                     phantom.POSTING = false;
+
                     if (!data) {
+                        // If method is exit - response may be empty, because server could be stopped while sending
+                        if (method === 'exit') {
+                          next();
+                          callback();
+                          return;
+                        }
+
                         next();
                         return callback(new HeadlessError("No response body for page." + method + "()"));
                     }
-                    var results = JSON.parse(data);
-                    // console.log("Response: ", results);
-                    
+
+                    var results;
+
+                    try {
+                      results = JSON.parse(data);
+                    } catch (error) {
+                      // If method is exit - response may be broken, because server could be stopped while sending
+                      if (method === 'exit') {
+                        next();
+                        callback();
+                        return;
+                      }
+
+                      next();
+                      callback(error);
+                      return;
+                    }
+
                     if (err) {
                         next();
                         return callback(results);
