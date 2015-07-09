@@ -1,9 +1,11 @@
-2.0.0 / WIP
+2.0.0 / 2015-07-09
 ------------------
 
 - Added SlimerJS support.
 - Moved callbacks to last position in all functions.
-  - old style format still works but shows deprecation message.
+  - old style calls still work but show deprecation message.
+- Renamed `options.phantomPath` -> `options.path`
+  - old style options still work but show deprecation message.
 - Added FreeBSD support.
 - Improved Linux support - try iproute2 before net-tools.
 - Added dot notation support for nested properties in `.set` / `.get`.
@@ -13,6 +15,7 @@
 - Fixed Yosemite support with multiname localhost aliases.
 - Return proper errors when PhantomJS / SlimerJS process dies.
 - Fixed `waitForSelector` callback result.
+- Fixed possible result corruption in `evaluate`.
 - Rewritten tests & automated testing.
 
 
