@@ -19,10 +19,7 @@ describe('page', function () {
         page.close(function (err) {
           assert.ifError(err);
 
-          browser.on('exit', function () {
-            done()
-          });
-          browser.exit();
+          browser.exit(done);
         });
       });
     }, { phantomPath: require(process.env.ENGINE || 'phantomjs').path });

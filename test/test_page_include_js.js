@@ -60,11 +60,7 @@ describe('page', function () {
               assert.equal(result[0], 'Hello Test', 'Script was executed');
               assert.equal(result[1], 1, 'Added a new script tag');
 
-              browser.on('exit', function () {
-                done();
-              });
-
-              browser.exit();
+              browser.exit(done);
             });
           });
         });

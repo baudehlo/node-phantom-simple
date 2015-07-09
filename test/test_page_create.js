@@ -18,8 +18,7 @@ describe('page', function () {
           return;
         }
 
-        browser.exit();
-        done();
+        browser.exit(done);
       });
     }, { phantomPath: require(process.env.ENGINE || 'phantomjs').path });
   });

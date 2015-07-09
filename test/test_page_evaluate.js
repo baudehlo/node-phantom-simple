@@ -48,11 +48,7 @@ describe('page.evaluate()', function () {
 
             assert.equal(result.h1text, 'Hello World');
 
-            browser.on('exit', function () {
-              done();
-            });
-
-            browser.exit();
+            browser.exit(done);
           });
         });
       });
@@ -95,11 +91,7 @@ describe('page.evaluate()', function () {
             assert.equal(result.h1text, 'Hello World');
             assert.equal(result.abc, 'abc');
 
-            browser.on('exit', function () {
-              done();
-            });
-
-            browser.exit();
+            browser.exit(done);
           });
         });
       });
@@ -142,11 +134,7 @@ describe('page.evaluate()', function () {
             assert.equal(result.h1text, 'Hello World');
             assert.equal(result.abc, 'abc');
 
-            browser.on('exit', function () {
-              done();
-            });
-
-            browser.exit();
+            browser.exit(done);
           }, 'a', 'b', 'c');
         });
       });

@@ -21,10 +21,7 @@ describe('command line options', function () {
 
         assert.equal(loadImages, true);
 
-        browser.on('exit', function () {
-          done();
-        });
-        browser.exit();
+        browser.exit(done);
       });
     }, {
       phantomPath: require(process.env.ENGINE || 'phantomjs').path
@@ -47,10 +44,7 @@ describe('command line options', function () {
 
         assert.equal(loadImages, true);
 
-        browser.on('exit', function () {
-          done();
-        });
-        browser.exit();
+        browser.exit(done);
       });
     }, {
       parameters: { 'load-images': true },
@@ -74,10 +68,7 @@ describe('command line options', function () {
 
         assert.equal(!!loadImages, false);
 
-        browser.on('exit', function () {
-          done();
-        });
-        browser.exit();
+        browser.exit(done);
       });
     }, {
       parameters: { 'load-images': false },

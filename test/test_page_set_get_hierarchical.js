@@ -33,10 +33,7 @@ describe('page', function () {
 
             assert.equal(ua, 'node-phantom tester');
 
-            browser.on('exit', function () {
-              done()
-            });
-            browser.exit();
+            browser.exit(done);
           });
         });
       });

@@ -52,10 +52,7 @@ describe('page', function () {
           assert.ok(localMsg === undefined);
           assert.ok(/handled on phantom-side/.test(String(messageForwardedByOnConsoleMessage)));
 
-          browser.on('exit', function () {
-            done();
-          });
-          browser.exit();
+          browser.exit(done);
         });
       });
     }, {

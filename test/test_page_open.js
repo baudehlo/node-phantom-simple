@@ -17,13 +17,13 @@ describe('page', function () {
   });
 
   it('open', function (done) {
-    driver.create(function (err, ph) {
+    driver.create(function (err, browser) {
       if (err) {
         done(err);
         return;
       }
 
-      ph.createPage(function (err, page) {
+      browser.createPage(function (err, page) {
         if (err) {
           done(err);
           return;
@@ -37,11 +37,7 @@ describe('page', function () {
 
           assert.equal(status, 'success');
 
-          ph.on('exit', function () {
-            done();
-          });
-
-          ph.exit();
+          browser.exit(done);
         });
       });
     }, {

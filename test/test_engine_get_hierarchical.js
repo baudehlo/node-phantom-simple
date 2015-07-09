@@ -23,10 +23,7 @@ describe('page', function () {
 
           assert.equal(userAgent, defaultPageSettings.userAgent);
 
-          browser.on('exit', function () {
-            done()
-          });
-          browser.exit();
+          browser.exit(done);
         });
       });
     }, { phantomPath: require(process.env.ENGINE || 'phantomjs').path });

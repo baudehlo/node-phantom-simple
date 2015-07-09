@@ -75,10 +75,7 @@ describe('page', function () {
                         
                         assert.notEqual(oldSettings.userAgent, newSettings.userAgent);
 
-                        browser.on('exit', function () {
-                          done();
-                        });
-                        browser.exit();
+                        browser.exit(done);
                       });
                     });
                   });

@@ -52,10 +52,7 @@ describe('page', function () {
 
               assert.equal(result, 'Hello Test');
 
-              browser.on('exit', function () {
-                done();
-              });
-              browser.exit();
+              browser.exit(done);
             });
           });
         });

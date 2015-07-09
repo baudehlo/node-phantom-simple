@@ -64,11 +64,7 @@ describe('page', function () {
               // Base64 decoded image should be the same (check size only)
               assert.equal((new Buffer(imagedata, 'base64')).length, stat.size);
 
-
-              browser.on('exit', function () {
-                done();
-              });
-              browser.exit();
+              browser.exit(done);
             });
           });
         });

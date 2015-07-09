@@ -68,11 +68,8 @@ describe('page', function () {
               setTimeout(function () {
                 assert.ok(gotFile);
 
-                browser.on('exit', function () {
-                  helpers.unlink(filePath);
-                  done();
-                });
-                browser.exit();
+                helpers.unlink(filePath);
+                browser.exit(done);
               }, 100);
             });
           });
