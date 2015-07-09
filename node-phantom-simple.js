@@ -191,7 +191,7 @@ exports.create = function (options, callback) {
             // and again to get ports phantom is listening on. This is to work
             // around this bug in libuv: https://github.com/joyent/libuv/issues/962
             // - this is only necessary when using cluster, but it's here regardless
-            var my_pid_command = util.format(cmd, process.pid, process.pid);
+            var my_pid_command = cmd.replace(/%d/g, process.pid);
 
             exec(my_pid_command, function (err, stdout, stderr) {
                 if (err !== null) {
@@ -205,7 +205,7 @@ exports.create = function (options, callback) {
                     ports.push(match[1]);
                 }
 
-                var phantom_pid_command = util.format(cmd, phantom_pid, phantom_pid);
+                var phantom_pid_command = cmd.replace(/%d/g, phantom_pid);
 
                 exec(phantom_pid_command, function (err, stdout, stderr) {
                     if (err !== null) {
