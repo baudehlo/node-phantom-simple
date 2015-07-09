@@ -24,22 +24,14 @@ over `node-phantom`:
 Migrating 1.x -> 2.x
 --------------------
 
-In general, you software should work, ban can show deprecation warning about
-outdated signatures. You need to update:
+Your software should work without changes, but can show deprecation warning
+about outdated signatures. You need to update:
 
 - `options.phantomPath` -> `options.path`
 - in `.create()` `.evaluate()` & `.waitForSelector()` -> move `callback` to last
   position of arguments list.
 
 That's all!
-
-
-Requirements
-------------
-
-You will need to install PhantomJS first. The bridge assumes that the
-`phantomjs` binary is available in the $PATH, or you will need to pass its path
-into the `phantom.create()` method.
 
 
 Installing
@@ -55,8 +47,8 @@ npm install phantomjs
 npm install slimerjs
 ```
 
-You also need install PhantomJS / SlimerJS, and pass those path to options or
-have those searcheable in the $PATH.
+__Note__. Don't forget to install PhantomJS / SlimerJS, and pass those path to
+options or have those searcheable in the $PATH.
 
 
 Usage
@@ -77,8 +69,8 @@ driver.create({ path: require('phantomjs').path }, function (err, browser) {
     return page.open("http://tilomitra.com/repository/screenscrape/ajax.html", function (err,status) {
       console.log("opened site? ", status);
       page.includeJs('http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js', function (err) {
-        //jQuery Loaded.
-        //Wait for a bit for AJAX content to load on the page. Here, we are waiting 5 seconds.
+        // jQuery Loaded.
+        // Wait for a bit for AJAX content to load on the page. Here, we are waiting 5 seconds.
         setTimeout(function () {
           return page.evaluate(function () {
             //Get what you want from the page using jQuery. A good way is to populate an object with all the jQuery commands that you need and then return the object.
@@ -118,7 +110,7 @@ __options__ (not mandatory):
 For example
 
 ```js
-phantom.create({ parameters: { 'ignore-ssl-errors': 'yes' } }, callback)
+driver.create({ parameters: { 'ignore-ssl-errors': 'yes' } }, callback)
 ```
 
 will start phantom as:
@@ -130,7 +122,9 @@ phantomjs --ignore-ssl-errors=yes
 You can rely on globally installed engines, but we recommend to pass path explicit:
 
 ```js
-phantom.create({ path: require('phantomjs').path }, callback)
+driver.create({ path: require('phantomjs').path }, callback)
+// or for slimer
+driver.create({ path: require('slimerjs').path }, callback)
 ```
 
 You can also have a look at [the test directory](tests/) to see some examples
@@ -170,7 +164,7 @@ page.set('zoomfactor', 0.25, function () {
   page.render('capture.png');
 });
 
-# You can get/set nested values easy!
+// You can get/set nested values easy!
 page.set('settings.userAgent', 'PhAnToSlImEr', callback);
 ```
 
