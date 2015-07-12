@@ -47,16 +47,16 @@ npm install phantomjs
 npm install slimerjs
 ```
 
-__Notes__. 
-- Don't forget to install PhantomJS / SlimerJS, and pass those path to
-options or have those searcheable in the $PATH.
-- SlimerJS is not headless and requires a windowing environment. Under Linux/FreeBSD/OSX [xvfb can be used to run headlessly.](https://docs.slimerjs.org/current/installation.html#having-a-headless-slimerjs) 
-  - Example using Travis CI 
-  ```
-  before_script:
-    - export DISPLAY=:99.0
-    - "sh -e /etc/init.d/xvfb start"
-  ```
+__Note__. SlimerJS is not headless and requires a windowing environment.
+Under Linux/FreeBSD/OSX [xvfb can be used to run headlessly.](https://docs.slimerjs.org/current/installation.html#having-a-headless-slimerjs). For example, if you wish
+to run SlimerJS on Travis-CI, add those lines to your `.travis.yml` config:
+
+```yaml
+before_script:
+  - export DISPLAY=:99.0
+  - "sh -e /etc/init.d/xvfb start"
+```
+
 
 Usage
 -----
