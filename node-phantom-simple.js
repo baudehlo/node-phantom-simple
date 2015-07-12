@@ -177,7 +177,7 @@ exports.create = function (options, callback) {
                 case 'linux':
                             // Modern distros usually have `iproute2` instead of `net-tools`.
                             // Try `ss` first, then fallback to `netstat`.
-                            cmd = 'if which ss > /dev/null; then ss -nlp | grep ",%d,"; else netstat -nlp | grep "[[:space:]]%d/"; fi';
+                            cmd = 'if which ss > /dev/null; then ss -nlp | grep "[,=]%d,"; else netstat -nlp | grep "[[:space:]]%d/"; fi';
                             break;
                 case 'darwin':
                             cmd = 'lsof -np %d | grep LISTEN';
