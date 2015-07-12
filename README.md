@@ -16,7 +16,7 @@ over `node-phantom`:
   - Fewer dependencies/layers.
   - Doesn't use the unreliable and huge socket.io.
   - Works under [`cluster`](http://nodejs.org/api/cluster.html) (node-phantom
-    does not, due to [how](https://nodejs.org/api/cluster.html#cluster_how_it_works))
+    does not, due to [how it works](https://nodejs.org/api/cluster.html#cluster_how_it_works))
     `server.listen(0)` works in cluster.
   - Supports SlimerJS.
 
@@ -47,9 +47,16 @@ npm install phantomjs
 npm install slimerjs
 ```
 
-__Note__. Don't forget to install PhantomJS / SlimerJS, and pass those path to
+__Notes__. 
+- Don't forget to install PhantomJS / SlimerJS, and pass those path to
 options or have those searcheable in the $PATH.
-
+- SlimerJS is not headless and requires a windowing environment. Under Linux/FreeBSD/OSX [xvfb can be used to run headlessly.](https://docs.slimerjs.org/current/installation.html#having-a-headless-slimerjs) 
+  - Example using Travis CI 
+  ```
+  before_script:
+    - export DISPLAY=:99.0
+    - "sh -e /etc/init.d/xvfb start"
+  ```
 
 Usage
 -----
@@ -172,7 +179,7 @@ page.set('settings.userAgent', 'PhAnToSlImEr', callback);
 Known issues
 ------------
 
-Engines a buggy. Here are some cases you should know.
+Engines are buggy. Here are some cases you should know.
 
 - `.evaluate` can return corrupted result:
   - SlimerJS: undefined -> null.
