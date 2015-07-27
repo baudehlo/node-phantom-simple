@@ -266,7 +266,7 @@ exports.create = function (options, callback) {
                 'injectJs', 'open', 'openUrl', 'release', 'reload', 'render', 'renderBase64',
                 'sendEvent', 'setContent', 'stop', 'switchToFocusedFrame', 'switchToFrame',
                 'switchToFrame', 'switchToChildFrame', 'switchToChildFrame', 'switchToMainFrame',
-                'switchToParentFrame', 'uploadFile',
+                'switchToParentFrame', 'uploadFile', 'clearMemoryCache'
             ];
             var page = {
                 setFn: function (name, fn, cb) {
