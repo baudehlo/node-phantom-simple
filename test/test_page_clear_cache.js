@@ -37,10 +37,11 @@ describe('page', function () {
                 return;
               }
 
-              assert.equal(status, 'success', 'Status is success');
-
-              page.clearMemoryCache();
-              browser.exit(done);
+              page.clearMemoryCache(function(err){
+                assert.ifError(err);
+                browser.exit(done);
+              });
+              
             });
           });
         }
