@@ -24,7 +24,7 @@ describe('engine', function () {
         page.open('http://www.google.com', function (err) {
           assert.ok(!!err); // we expect an error
           done();
-        })
+        });
       });
     });
   });

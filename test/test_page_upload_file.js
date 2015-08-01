@@ -18,9 +18,8 @@ describe('page', function () {
         request.on('data', function (buffer) {
           gotFile = buffer.toString('ascii').indexOf('Hello World') > 0;
         });
-      }
-      else {
-        response.writeHead(200, { "Content-Type": "text/html" });
+      } else {
+        response.writeHead(200, { 'Content-Type': 'text/html' });
         response.end('<html><head></head><body><form id="testform" action="/upload" method="post" enctype="multipart/form-data"><input id="test" name="test" type="file"></form></body></html>');
       }
     }).listen(done);
@@ -59,7 +58,7 @@ describe('page', function () {
               }
 
               page.evaluate(function () {
-                document.forms['testform'].submit();
+                document.forms.testform.submit();
               }, function (err) {
                 if (err) {
                   helpers.unlink(filePath);

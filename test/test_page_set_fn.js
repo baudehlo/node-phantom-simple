@@ -11,7 +11,7 @@ describe('page', function () {
 
   before(function (done) {
     server = http.createServer(function (request, response) {
-      response.writeHead(200, { "Content-Type": "text/html" });
+      response.writeHead(200, { 'Content-Type': 'text/html' });
       response.end('<html><head><script>console.log("handled on phantom-side")</script></head><body><h1>Hello World</h1></body></html>');
     }).listen(done);
   });
@@ -32,6 +32,8 @@ describe('page', function () {
             done(err);
             return;
           }
+
+          /*eslint-disable no-undefined, no-undef-init*/
 
           var messageForwardedByOnConsoleMessage = undefined;
           var localMsg = undefined;

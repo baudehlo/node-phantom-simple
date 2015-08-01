@@ -9,13 +9,13 @@ describe('command line options', function () {
   it('load-images is default', function (done) {
     driver.create({ path: require(process.env.ENGINE || 'phantomjs').path }, function (err, browser) {
       if (err) {
-        callback(err);
+        done(err);
         return;
       }
 
       browser.get('defaultPageSettings.loadImages', function (err, loadImages) {
         if (err) {
-          callback(err);
+          done(err);
           return;
         }
 
@@ -32,13 +32,13 @@ describe('command line options', function () {
       { parameters: { 'load-images': true }, path: require(process.env.ENGINE || 'phantomjs').path },
       function (err, browser) {
         if (err) {
-          callback(err);
+          done(err);
           return;
         }
 
         browser.get('defaultPageSettings.loadImages', function (err, loadImages) {
           if (err) {
-            callback(err);
+            done(err);
             return;
           }
 
@@ -55,13 +55,13 @@ describe('command line options', function () {
     driver.create({ parameters: { 'load-images': false }, path: require(process.env.ENGINE || 'phantomjs').path },
       function (err, browser) {
         if (err) {
-          callback(err);
+          done(err);
           return;
         }
 
         browser.get('defaultPageSettings.loadImages', function (err, loadImages) {
           if (err) {
-            callback(err);
+            done(err);
             return;
           }
 

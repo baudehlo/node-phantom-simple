@@ -20,6 +20,10 @@ describe('page', function () {
         }
 
         browser.get('defaultPageSettings.userAgent', function (err, userAgent) {
+          if (err) {
+            done(err);
+            return;
+          }
 
           assert.equal(userAgent, defaultPageSettings.userAgent);
 

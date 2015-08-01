@@ -11,7 +11,7 @@ describe('push notifications', function () {
 
   before(function (done) {
     server = http.createServer(function (request, response) {
-      response.writeHead(200, { "Content-Type": "text/html" });
+      response.writeHead(200, { 'Content-Type': 'text/html' });
       response.end('<html><head><script>window.callPhantom({ msg: "callPhantom" }); conXsole.log("cause-an-error");</script></head><body><h1>Hello World</h1></body></html>');
     }).listen(done);
   });
@@ -39,6 +39,7 @@ describe('push notifications', function () {
         };
 
         page.evaluate(function () {
+          /*eslint-disable no-console*/
           console.log('Test console message');
         }, function (err) {
           if (err) {
@@ -69,7 +70,7 @@ describe('push notifications', function () {
 
 
         page.onCallback = function (msg) {
-          assert.deepEqual(msg, { msg: "callPhantom" });
+          assert.deepEqual(msg, { msg: 'callPhantom' });
 
           browser.exit(done);
         };

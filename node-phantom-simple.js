@@ -1,4 +1,7 @@
-"use strict";
+/*global document*/
+/*eslint-disable no-console*/
+
+'use strict';
 
 var HeadlessError   = require('./headless_error');
 var http            = require('http');
@@ -18,49 +21,48 @@ var queue = function (worker) {
             q.process();
         },
         process: function () {
-            if (running || _q.length === 0) return;
+            if (running || _q.length === 0) { return; }
             running = true;
             var cb = function () {
                 running = false;
                 q.process();
-            }
+            };
             var task = _q.shift();
             worker(task, cb);
         }
-    }
+    };
     return q;
-}
+};
 
 function callbackOrDummy (callback, poll_func) {
-    if (!callback) return function () {};
+    if (!callback) { return function () {}; }
     if (poll_func) {
         return function () {
             var args = Array.prototype.slice.call(arguments);
-            // console.log("Polling for results before returning with: " + JSON.stringify(args));
+            // console.log('Polling for results before returning with: ' + JSON.stringify(args));
             poll_func(function (err) {
-                // console.log("Inside...");
+                // console.log('Inside...');
                 if (err) {
                     // We could send back the original arguments,
                     // but I'm assuming that this error is better.
-                    callback(err)
+                    callback(err);
                 } else {
                     callback.apply(null, args);
                 }
             });
-        }
+        };
     }
-    else {
-        return callback;
-    }
+
+    return callback;
 }
 
 function unwrapArray (arr) {
-    return arr && arr.length == 1 ? arr[0] : arr
+    return arr && arr.length === 1 ? arr[0] : arr;
 }
 
 function wrapArray(arr) {
     // Ensure that arr is an Array
-    return (arr instanceof Array) ? arr : [arr];
+    return (arr instanceof Array) ? arr : [ arr ];
 }
 
 var pageEvaluateDeprecatedFn = util.deprecate(function () {}, "Deprecated 'page.evaluate(fn, callback, args...)' syntax - use 'page.evaluate(fn, args..., callback)' instead");
@@ -92,13 +94,14 @@ exports.create = function (options, callback) {
       options.path = 'phantomjs';
     }
 
-    if (options.parameters === undefined) options.parameters = {};
+    if (typeof options.parameters === 'undefined') { options.parameters = {}; }
 
     function spawnPhantom (callback) {
-        var args=[];
-        for(var parm in options.parameters) {
+        var args = [];
+
+        Object.keys(options.parameters).forEach(function (parm) {
             args.push('--' + parm + '=' + options.parameters[parm]);
-        }
+        });
         args = args.concat([ path.join(__dirname, 'bridge.js') ]);
 
         var phantom = spawn(options.path, args);
@@ -107,7 +110,9 @@ exports.create = function (options, callback) {
         var closeChild = function () {
             try {
                 phantom.kill();
-            } catch(e) {}
+            } catch (__) {
+                //
+            }
             process.exit(1);
         };
 
@@ -117,42 +122,43 @@ exports.create = function (options, callback) {
         };
 
         // Note it's possible to blow up maxEventListeners doing this - consider moving to a single handler.
-        ['SIGINT', 'SIGTERM'].forEach(function(sig) {
+        [ 'SIGINT', 'SIGTERM' ].forEach(function(sig) {
             process.on(sig, closeChild);
         });
 
         process.on('uncaughtException', uncaughtHandler);
 
         phantom.once('error', function (err) {
-        	callback(err);
+            callback(err);
         });
 
         phantom.stderr.on('data', function (data) {
             if (options.ignoreErrorPattern && options.ignoreErrorPattern.exec(data)) {
                 return;
             }
-            return console.warn('phantom stderr: '+data);
+            console.warn('phantom stderr: ' + data);
         });
         var exitCode = 0;
         phantom.once('exit', function (code) {
-            ['SIGINT', 'SIGTERM'].forEach(function(sig) {
+            [ 'SIGINT', 'SIGTERM' ].forEach(function(sig) {
                 process.removeListener(sig, closeChild);
             });
             process.removeListener('uncaughtException', uncaughtHandler);
             exitCode = code;
         });
 
-        // Wait for "Ready" line
+        // Wait for 'Ready' line
         phantom.stdout.once('data', function (data) {
             // setup normal listener now
             phantom.stdout.on('data', function (data) {
-                return console.log('phantom stdout: '+data);
+                console.log('phantom stdout: ' + data);
             });
 
             var matches = data.toString().match(/Ready \[(\d+)\] \[(.+?)\]/);
             if (!matches) {
                 phantom.kill();
-                return callback(new HeadlessError("Unexpected output from PhantomJS: " + data));
+                callback(new HeadlessError('Unexpected output from PhantomJS: ' + data));
+                return;
             }
 
             var phantom_port = matches[2].indexOf(':') === -1 ? matches[2] : matches[2].split(':')[1];
@@ -196,7 +202,8 @@ exports.create = function (options, callback) {
                             break;
                 default:
                             phantom.kill();
-                            return callback(new HeadlessError("Your OS is not supported yet. Tell us how to get the listening port based on PID"));
+                            callback(new HeadlessError('Your OS is not supported yet. Tell us how to get the listening port based on PID'));
+                            return;
             }
 
             // We do this twice - first to get ports this process is listening on
@@ -205,7 +212,7 @@ exports.create = function (options, callback) {
             // - this is only necessary when using cluster, but it's here regardless
             var my_pid_command = cmd.replace(/%d/g, process.pid);
 
-            exec(my_pid_command, function (err, stdout, stderr) {
+            exec(my_pid_command, function (err, stdout /*, stderr*/) {
                 if (err !== null) {
                     // This can happen if grep finds no matching lines, so ignore it.
                     stdout = '';
@@ -213,27 +220,29 @@ exports.create = function (options, callback) {
                 var re = /(?:127\.0\.0\.1|localhost):(\d+)/ig, match;
                 var ports = [];
 
-                while (match = re.exec(stdout)) {
+                while ((match = re.exec(stdout)) !== null) {
                     ports.push(match[1]);
                 }
 
                 var phantom_pid_command = cmd.replace(/%d/g, phantom_pid);
 
-                exec(phantom_pid_command, function (err, stdout, stderr) {
+                exec(phantom_pid_command, function (err, stdout /*, stderr*/) {
                     if (err !== null) {
                         phantom.kill();
-                        return callback(new HeadlessError("Error executing command to extract phantom ports: " + err));
+                        callback(new HeadlessError('Error executing command to extract phantom ports: ' + err));
+                        return;
                     }
                     var port;
-                    while (match = re.exec(stdout)) {
-                        if (ports.indexOf(match[1]) == -1) {
+                    while ((match = re.exec(stdout)) !== null) {
+                        if (ports.indexOf(match[1]) === -1) {
                             port = match[1];
                         }
                     }
 
                     if (!port) {
                         phantom.kill();
-                        return callback(new HeadlessError("Error extracting port from: " + stdout));
+                        callback(new HeadlessError('Error extracting port from: ' + stdout));
+                        return;
                     }
 
                     callback(null, phantom, port);
@@ -241,24 +250,24 @@ exports.create = function (options, callback) {
             });
         });
 
-        setTimeout(function () {    //wait a bit to see if the spawning of phantomjs immediately fails due to bad path or similar
-        	if (exitCode !== 0) {
-        		return callback(new HeadlessError("Phantom immediately exited with: " + exitCode));
-        	}
-        },100);
-    };
+        setTimeout(function () {    // wait a bit to see if the spawning of phantomjs immediately fails due to bad path or similar
+            if (exitCode !== 0) {
+                return callback(new HeadlessError('Phantom immediately exited with: ' + exitCode));
+            }
+        }, 100);
+    }
 
     spawnPhantom(function (err, phantom, port) {
         if (err) {
             return callback(err);
         }
 
-        // console.log("Phantom spawned with web server on port: " + port);
+        // console.log('Phantom spawned with web server on port: ' + port);
 
         var pages = {};
 
         var setup_new_page = function (id) {
-            // console.log("Page created with id: " + id);
+            // console.log('Page created with id: ' + id);
             var methods = [
                 'addCookie', 'childFramesCount', 'childFramesName', 'clearCookies', 'close',
                 'currentFrameName', 'deleteCookie', 'evaluateJavaScript',
@@ -270,13 +279,13 @@ exports.create = function (options, callback) {
             ];
             var page = {
                 setFn: function (name, fn, cb) {
-                    request_queue.push([[id, 'setFunction', name, fn.toString()], callbackOrDummy(cb, poll_func)]);
+                    request_queue.push([ [ id, 'setFunction', name, fn.toString() ], callbackOrDummy(cb, poll_func) ]);
                 },
                 get: function (name, cb) {
-                    request_queue.push([[id, 'getProperty', name], callbackOrDummy(cb, poll_func)]);
+                    request_queue.push([ [ id, 'getProperty', name ], callbackOrDummy(cb, poll_func) ]);
                 },
                 set: function (name, val, cb) {
-                    request_queue.push([[id, 'setProperty', name, val], callbackOrDummy(cb, poll_func)]);
+                    request_queue.push([ [ id, 'setProperty', name, val ], callbackOrDummy(cb, poll_func) ]);
                 },
                 evaluate: function (fn, cb) {
                     var extra_args = [];
@@ -289,7 +298,7 @@ exports.create = function (options, callback) {
                           extra_args = Array.prototype.slice.call(arguments, 2);
                         }
                     }
-                    request_queue.push([[id, 'evaluate', fn.toString()].concat(extra_args), callbackOrDummy(cb, poll_func)]);
+                    request_queue.push([ [ id, 'evaluate', fn.toString() ].concat(extra_args), callbackOrDummy(cb, poll_func) ]);
                 },
                 waitForSelector: function (selector, timeout, cb) {
                     if (cb && Object.prototype.toString.call(timeout) === '[object Function]') {
@@ -309,31 +318,30 @@ exports.create = function (options, callback) {
 
                     var startTime = Date.now();
                     var timeoutInterval = 150;
-                    var testRunning = false;
-                    //if evaluate succeeds, invokes callback w/ true, if timeout,
+                    // if evaluate succeeds, invokes callback w/ true, if timeout,
                     // invokes w/ false, otherwise just exits
                     var testForSelector = function () {
                         var elapsedTime = Date.now() - startTime;
 
                         if (elapsedTime > timeout) {
-                            return cb(new HeadlessError("Timeout waiting for selector: " + selector));
+                            cb(new HeadlessError('Timeout waiting for selector: ' + selector));
+                            return;
                         }
 
+                        /*eslint-disable handle-callback-err*/
                         page.evaluate(function (selector) {
                             return document.querySelectorAll(selector).length;
                         }, selector, function (err, result) {
-                            testRunning = false;
-                            if (result > 0) {//selector found
+                            if (result > 0) { // selector found
                                 cb();
-                            }
-                            else {
+                            } else {
                                 setTimeout(testForSelector, timeoutInterval);
                             }
                         });
                     };
 
                     setTimeout(testForSelector, timeoutInterval);
-                },
+                }
             };
             methods.forEach(function (method) {
                 page[method] = function () {
@@ -342,15 +350,15 @@ exports.create = function (options, callback) {
                     if (all_args.length > 0 && typeof all_args[all_args.length - 1] === 'function') {
                         callback = all_args.pop();
                     }
-                    var req_params = [id, method];
-                    request_queue.push([req_params.concat(all_args), callbackOrDummy(callback, poll_func)]);
-                }
+                    var req_params = [ id, method ];
+                    request_queue.push([ req_params.concat(all_args), callbackOrDummy(callback, poll_func) ]);
+                };
             });
 
             pages[id] = page;
 
-            return page;            
-        }
+            return page;
+        };
 
         var poll_func = setup_long_poll(phantom, port, pages, setup_new_page);
 
@@ -360,19 +368,19 @@ exports.create = function (options, callback) {
             var page = params[0];
             var method = params[1];
             var args = params.slice(2);
-            
+
             var http_opts = {
                 hostname: 'localhost',
                 port: port,
                 path: '/',
-                method: 'POST',
-            }
+                method: 'POST'
+            };
 
             phantom.POSTING = true;
 
             var req = http.request(http_opts, function (res) {
-                // console.log("Got a response: " + res.statusCode);
-                var err = res.statusCode == 500 ? true : false;
+                // console.log('Got a response: ' + res.statusCode);
+                var err = res.statusCode === 500 ? true : false;
                 res.setEncoding('utf8');
                 var data = '';
                 res.on('data', function (chunk) {
@@ -390,7 +398,8 @@ exports.create = function (options, callback) {
                         }
 
                         next();
-                        return callback(new HeadlessError("No response body for page." + method + "()"));
+                        callback(new HeadlessError('No response body for page.' + method + '()'));
+                        return;
                     }
 
                     var results;
@@ -412,15 +421,17 @@ exports.create = function (options, callback) {
 
                     if (err) {
                         next();
-                        return callback(results);
+                        callback(results);
+                        return;
                     }
 
                     if (method === 'createPage') {
                         var id = results.page_id;
                         var page = setup_new_page(id);
-                        
+
                         next();
-                        return callback(null, page);
+                        callback(null, page);
+                        return;
                     }
 
                     // Not createPage - just run the callback
@@ -437,14 +448,14 @@ exports.create = function (options, callback) {
                   return;
                 }
 
-                console.warn("Request() error evaluating " + method + "() call: " + err);
-                callback(new HeadlessError("Request() error evaluating " + method + "() call: " + err));
-            })
+                console.warn('Request() error evaluating ' + method + '() call: ' + err);
+                callback(new HeadlessError('Request() error evaluating ' + method + '() call: ' + err));
+            });
 
             req.setHeader('Content-Type', 'application/json');
 
-            var json = JSON.stringify({page: page, method: method, args: args});
-            // console.log("Sending: ", json);
+            var json = JSON.stringify({ page: page, method: method, args: args });
+            // console.log('Sending: ', json);
             req.setHeader('Content-Length', Buffer.byteLength(json));
             req.write(json);
             req.end();
@@ -453,59 +464,67 @@ exports.create = function (options, callback) {
         var proxy = {
             process: phantom,
             createPage: function (callback) {
-                request_queue.push([[0,'createPage'], callbackOrDummy(callback, poll_func)]);
+                request_queue.push([ [ 0, 'createPage' ], callbackOrDummy(callback, poll_func) ]);
             },
-            injectJs: function (filename,callback) {
-                request_queue.push([[0,'injectJs', filename], callbackOrDummy(callback, poll_func)]);
+            injectJs: function (filename, callback) {
+                request_queue.push([ [ 0, 'injectJs', filename ], callbackOrDummy(callback, poll_func) ]);
             },
             addCookie: function (cookie, callback) {
-                request_queue.push([[0,'addCookie', cookie], callbackOrDummy(callback, poll_func)]);
+                request_queue.push([ [ 0, 'addCookie', cookie ], callbackOrDummy(callback, poll_func) ]);
             },
             clearCookies: function (callback) {
-                request_queue.push([[0, 'clearCookies'], callbackOrDummy(callback, poll_func)]);
+                request_queue.push([ [ 0, 'clearCookies' ], callbackOrDummy(callback, poll_func) ]);
             },
             deleteCookie: function (cookie, callback) {
-                request_queue.push([[0, 'deleteCookie', cookie], callbackOrDummy(callback, poll_func)]);
+                request_queue.push([ [ 0, 'deleteCookie', cookie ], callbackOrDummy(callback, poll_func) ]);
             },
             set : function (property, value, callback) {
-                request_queue.push([[0, 'setProperty', property, value], callbackOrDummy(callback, poll_func)]);
+                request_queue.push([ [ 0, 'setProperty', property, value ], callbackOrDummy(callback, poll_func) ]);
             },
             get : function (property, callback) {
-                request_queue.push([[0, 'getProperty', property], callbackOrDummy(callback, poll_func)]);
+                request_queue.push([ [ 0, 'getProperty', property ], callbackOrDummy(callback, poll_func) ]);
             },
-            exit: function(callback){
+            exit: function (callback) {
                 phantom.kill('SIGTERM');
 
                 // In case of SlimerJS `kill` will close only wrapper of xulrunner.
                 // We should send `exit` command to process.
-                request_queue.push([[0, 'exit', 0], callbackOrDummy(callback)]);
+                request_queue.push([ [ 0, 'exit', 0 ], callbackOrDummy(callback) ]);
             },
             on: function () {
                 phantom.on.apply(phantom, arguments);
-            },
+            }
         };
-        
+
         callback(null, proxy);
     });
-}
+};
 
 function setup_long_poll (phantom, port, pages, setup_new_page) {
-    // console.log("Setting up long poll");
+    // console.log('Setting up long poll');
 
     var http_opts = {
         hostname: 'localhost',
         port: port,
         path: '/',
-        method: 'GET',
-    }
+        method: 'GET'
+    };
 
     var dead = false;
     phantom.once('exit', function () { dead = true; });
 
     var poll_func = function (cb) {
-        if (dead) return cb(new HeadlessError('Phantom Process died'));
-        if (phantom.POSTING) return cb();
-        // console.log("Polling...");
+        if (dead) {
+            cb(new HeadlessError('Phantom Process died'));
+            return;
+        }
+
+        if (phantom.POSTING) {
+            cb();
+            return;
+        }
+
+        // console.log('Polling...');
         var req = http.get(http_opts, function(res) {
             res.setEncoding('utf8');
             var data = '';
@@ -513,22 +532,27 @@ function setup_long_poll (phantom, port, pages, setup_new_page) {
                 data += chunk;
             });
             res.on('end', function () {
-                // console.log("Poll results: " + data);
-                if (dead) return cb(new HeadlessError('Phantom Process died'));
-                try {
-                    var results = JSON.parse(data).data;
+                var results;
+                // console.log('Poll results: ' + data);
+                if (dead) {
+                    cb(new HeadlessError('Phantom Process died'));
+                    return;
                 }
-                catch (err) {
-                    console.warn("Error parsing JSON from phantom: " + err);
-                    console.warn("Data from phantom was: " + data);
-                    return cb(new HeadlessError("Error parsing JSON from phantom: " + err
-                            + "\nData from phantom was: " + data));
+
+                try {
+                    results = JSON.parse(data).data;
+                } catch (err) {
+                    console.warn('Error parsing JSON from phantom: ' + err);
+                    console.warn('Data from phantom was: ' + data);
+                    cb(new HeadlessError('Error parsing JSON from phantom: ' + err
+                        + '\nData from phantom was: ' + data));
+                    return;
                 }
                 // if (results.length > 0) {
-                //     console.log("Long poll results: ", results);
+                //     console.log('Long poll results: ', results);
                 // }
                 // else {
-                //     console.log("Zero callbacks");
+                //     console.log('Zero callbacks');
                 // }
                 results.forEach(function (r) {
                     if (r.page_id) {
@@ -537,20 +561,17 @@ function setup_long_poll (phantom, port, pages, setup_new_page) {
                             if (pages[r.page_id].onPageCreated) {
                                 pages[r.page_id].onPageCreated(new_page);
                             }
-                        }
-                        else if (pages[r.page_id] && pages[r.page_id][r.callback]) {
+                        } else if (pages[r.page_id] && pages[r.page_id][r.callback]) {
                             var callbackFunc = pages[r.page_id][r.callback];
                             if (callbackFunc.length > 1) {
                                 // We use `apply` if the function is expecting multiple args
                                 callbackFunc.apply(pages[r.page_id], wrapArray(r.args));
-                            }
-                            else {
+                            } else {
                                 // Old `call` behaviour is deprecated
                                 callbackFunc.call(pages[r.page_id], unwrapArray(r.args));
                             }
                         }
-                    }
-                    else {
+                    } else {
                         var cb = callbackOrDummy(phantom[r.callback]);
                         cb.apply(phantom, r.args);
                     }
@@ -559,16 +580,16 @@ function setup_long_poll (phantom, port, pages, setup_new_page) {
             });
         });
         req.on('error', function (err) {
-            if (dead || phantom.killed) return;
-            console.warn("Poll Request error: " + err);
+            if (dead || phantom.killed) { return; }
+            console.warn('Poll Request error: ' + err);
         });
     };
 
     var repeater = function () {
         setTimeout(function () {
-            poll_func(repeater)
+            poll_func(repeater);
         }, POLL_INTERVAL);
-    }
+    };
 
     repeater();
 

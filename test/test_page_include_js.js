@@ -14,8 +14,7 @@ describe('page', function () {
       if (request.url === '/test.js') {
         response.writeHead(200, { 'Content-Type': 'text/javascript' });
         response.end('document.getElementsByTagName("h1")[0].innerText="Hello Test";');
-      }
-      else {
+      } else {
         response.writeHead(200, { 'Content-Type': 'text/html' });
         response.end('<html><head></head><body><h1>Hello World</h1></body></html>');
       }
@@ -52,7 +51,7 @@ describe('page', function () {
               }
 
               page.evaluate(function () {
-                return [document.getElementsByTagName('h1')[0].innerText, document.getElementsByTagName('script').length];
+                return [ document.getElementsByTagName('h1')[0].innerText, document.getElementsByTagName('script').length ];
               }, function (err, result) {
                 if (err) {
                   done(err);

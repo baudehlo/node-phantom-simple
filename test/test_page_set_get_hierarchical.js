@@ -13,7 +13,7 @@ describe('page', function () {
         return;
       }
 
-      browser.createPage(function (err, page){
+      browser.createPage(function (err, page) {
         if (err) {
           done(err);
           return;
@@ -25,7 +25,7 @@ describe('page', function () {
             return;
           }
 
-          page.get('settings.userAgent',function (err, ua) {
+          page.get('settings.userAgent', function (err, ua) {
             if (err) {
               done(err);
               return;

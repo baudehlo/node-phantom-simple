@@ -11,7 +11,7 @@ describe('page.evaluate()', function () {
 
   before(function (done) {
     server = http.createServer(function (request, response) {
-      response.writeHead(200, { "Content-Type": 'text/html' });
+      response.writeHead(200, { 'Content-Type': 'text/html' });
       response.end('<html><head></head><body><h1>Hello World</h1></body></html>');
     }).listen(done);
   });
