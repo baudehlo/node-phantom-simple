@@ -1,3 +1,11 @@
+2.0.2 / 2015-08-02
+------------------
+
+- Added `clearMemoryCache()` engine method support.
+- Coding style update.
+- Added linter to tests.
+
+
 2.0.1 / 2015-07-12
 ------------------
 
