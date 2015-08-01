@@ -12,10 +12,10 @@ var callback_stack = [];
 phantom.onError = function (msg, trace) {
   var msgStack = [ 'PHANTOM ERROR: ' + msg ];
   if (trace && trace.length) {
-      msgStack.push('TRACE:');
-      trace.forEach(function(t) {
-          msgStack.push(' -> ' + (t.file || t.sourceURL) + ': ' + t.line + (t.function ? ' (in function ' + t.function + ')' : ''));
-      });
+    msgStack.push('TRACE:');
+    trace.forEach(function(t) {
+      msgStack.push(' -> ' + (t.file || t.sourceURL) + ': ' + t.line + (t.function ? ' (in function ' + t.function + ')' : ''));
+    });
   }
   system.stderr.writeLine(msgStack.join('\n'));
   phantom.exit(1);
@@ -145,16 +145,16 @@ var callbacks = [
 
 function setup_callbacks (id, page) {
   callbacks.forEach(function (cb) {
-        page[cb] = function (parm) {
-            var args = Array.prototype.slice.call(arguments);
-            if ((cb === 'onResourceRequested') && (parm.url.indexOf('data:image') === 0)) {
-              return;
-            }
-            // console.log('Callback: ' + cb);
-            if (cb === 'onClosing') { args = []; }
-            callback_stack.push({ 'page_id': id, 'callback': cb, 'args': args });
-          // console.log('Callback stack size now: ' + callback_stack.length);
-        };
+    page[cb] = function (parm) {
+      var args = Array.prototype.slice.call(arguments);
+      if ((cb === 'onResourceRequested') && (parm.url.indexOf('data:image') === 0)) {
+        return;
+      }
+      // console.log('Callback: ' + cb);
+      if (cb === 'onClosing') { args = []; }
+      callback_stack.push({ 'page_id': id, 'callback': cb, 'args': args });
+      // console.log('Callback stack size now: ' + callback_stack.length);
+    };
   });
   // Special case this
   page.onPageCreated = function (page) {

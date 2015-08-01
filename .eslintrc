@@ -115,4 +115,4 @@ rules:
   #
   # Our custom rules
   #
-  #nodeca/indent:                [ 2, spaces, 2 ]
+  nodeca/indent:                [ 2, spaces, 2 ]
