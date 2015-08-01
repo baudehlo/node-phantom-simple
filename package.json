@@ -7,11 +7,14 @@
   "repository": "baudehlo/node-phantom-simple",
   "main": "node-phantom-simple.js",
   "scripts": {
+    "lint": "./node_modules/.bin/eslint --reset .",
     "test": "npm run test-phantom && npm run test-slimer",
     "test-phantom": "./node_modules/.bin/mocha",
     "test-slimer": "ENGINE=slimerjs ./node_modules/.bin/mocha"
   },
   "devDependencies": {
+    "eslint": "0.24.1",
+    "eslint-plugin-nodeca": "^1.0.0",
     "mocha": "^2.2.5",
     "phantomjs": "^1.9.17",
     "slimerjs": "^0.9.5"
