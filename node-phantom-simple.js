@@ -31,24 +31,26 @@ var queue = function (worker) {
       worker(task, cb);
     }
   };
+
   return q;
 };
 
 function callbackOrDummy (callback, poll_func) {
   if (!callback) { return function () {}; }
+
   if (poll_func) {
     return function () {
       var args = Array.prototype.slice.call(arguments);
-      // console.log('Polling for results before returning with: ' + JSON.stringify(args));
+
       poll_func(function (err) {
-        // console.log('Inside...');
         if (err) {
           // We could send back the original arguments,
           // but I'm assuming that this error is better.
           callback(err);
-        } else {
-          callback.apply(null, args);
+          return;
         }
+
+        callback.apply(null, args);
       });
     };
   }
@@ -102,6 +104,7 @@ exports.create = function (options, callback) {
     Object.keys(options.parameters).forEach(function (parm) {
       args.push('--' + parm + '=' + options.parameters[parm]);
     });
+
     args = args.concat([ path.join(__dirname, 'bridge.js') ]);
 
     var phantom = spawn(options.path, args);
@@ -138,11 +141,14 @@ exports.create = function (options, callback) {
       }
       console.warn('phantom stderr: ' + data);
     });
+
     var exitCode = 0;
+
     phantom.once('exit', function (code) {
       [ 'SIGINT', 'SIGTERM' ].forEach(function(sig) {
         process.removeListener(sig, closeChild);
       });
+
       process.removeListener('uncaughtException', uncaughtHandler);
       exitCode = code;
     });
@@ -155,6 +161,7 @@ exports.create = function (options, callback) {
       });
 
       var matches = data.toString().match(/Ready \[(\d+)\] \[(.+?)\]/);
+
       if (!matches) {
         phantom.kill();
         callback(new HeadlessError('Unexpected output from PhantomJS: ' + data));
@@ -162,6 +169,7 @@ exports.create = function (options, callback) {
       }
 
       var phantom_port = matches[2].indexOf(':') === -1 ? matches[2] : matches[2].split(':')[1];
+
       phantom_port = parseInt(phantom_port, 0);
 
       if (phantom_port !== 0) {
@@ -179,6 +187,7 @@ exports.create = function (options, callback) {
       // become much simpler
       var platform = require('os').platform();
       var cmd = null;
+
       switch (platform) {
         case 'linux':
           // Modern distros usually have `iproute2` instead of `net-tools`.
@@ -222,6 +231,7 @@ exports.create = function (options, callback) {
           // This can happen if grep finds no matching lines, so ignore it.
           stdout = '';
         }
+
         var re = /(?:127\.0\.0\.1|localhost):(\d+)/ig, match;
         var ports = [];
 
@@ -237,7 +247,9 @@ exports.create = function (options, callback) {
             callback(new HeadlessError('Error executing command to extract phantom ports: ' + err));
             return;
           }
+
           var port;
+
           while ((match = re.exec(stdout)) !== null) {
             if (ports.indexOf(match[1]) === -1) {
               port = match[1];
@@ -255,7 +267,7 @@ exports.create = function (options, callback) {
       });
     });
 
-    setTimeout(function () {    // wait a bit to see if the spawning of phantomjs immediately fails due to bad path or similar
+    setTimeout(function () { // wait a bit to see if the spawning of phantomjs immediately fails due to bad path or similar
       if (exitCode !== 0) {
         return callback(new HeadlessError('Phantom immediately exited with: ' + exitCode));
       }
@@ -264,15 +276,13 @@ exports.create = function (options, callback) {
 
   spawnPhantom(function (err, phantom, port) {
     if (err) {
-      return callback(err);
+      callback(err);
+      return;
     }
-
-    // console.log('Phantom spawned with web server on port: ' + port);
 
     var pages = {};
 
     var setup_new_page = function (id) {
-      // console.log('Page created with id: ' + id);
       var methods = [
         'addCookie', 'childFramesCount', 'childFramesName', 'clearCookies', 'close',
         'currentFrameName', 'deleteCookie', 'evaluateJavaScript',
@@ -282,18 +292,23 @@ exports.create = function (options, callback) {
         'switchToFrame', 'switchToChildFrame', 'switchToChildFrame', 'switchToMainFrame',
         'switchToParentFrame', 'uploadFile', 'clearMemoryCache'
       ];
+
       var page = {
         setFn: function (name, fn, cb) {
           request_queue.push([ [ id, 'setFunction', name, fn.toString() ], callbackOrDummy(cb, poll_func) ]);
         },
+
         get: function (name, cb) {
           request_queue.push([ [ id, 'getProperty', name ], callbackOrDummy(cb, poll_func) ]);
         },
+
         set: function (name, val, cb) {
           request_queue.push([ [ id, 'setProperty', name, val ], callbackOrDummy(cb, poll_func) ]);
         },
+
         evaluate: function (fn, cb) {
           var extra_args = [];
+
           if (arguments.length > 2) {
             if (Object.prototype.toString.call(arguments[arguments.length - 1]) === '[object Function]') {
               extra_args = Array.prototype.slice.call(arguments, 1, -1);
@@ -303,8 +318,10 @@ exports.create = function (options, callback) {
               extra_args = Array.prototype.slice.call(arguments, 2);
             }
           }
+
           request_queue.push([ [ id, 'evaluate', fn.toString() ].concat(extra_args), callbackOrDummy(cb, poll_func) ]);
         },
+
         waitForSelector: function (selector, timeout, cb) {
           if (cb && Object.prototype.toString.call(timeout) === '[object Function]') {
             pageWaitForSelectorDeprecatedFn();
@@ -348,14 +365,18 @@ exports.create = function (options, callback) {
           setTimeout(testForSelector, timeoutInterval);
         }
       };
+
       methods.forEach(function (method) {
         page[method] = function () {
           var all_args = Array.prototype.slice.call(arguments);
           var callback = null;
+
           if (all_args.length > 0 && typeof all_args[all_args.length - 1] === 'function') {
             callback = all_args.pop();
           }
+
           var req_params = [ id, method ];
+
           request_queue.push([ req_params.concat(all_args), callbackOrDummy(callback, poll_func) ]);
         };
       });
@@ -384,13 +405,15 @@ exports.create = function (options, callback) {
       phantom.POSTING = true;
 
       var req = http.request(http_opts, function (res) {
-        // console.log('Got a response: ' + res.statusCode);
         var err = res.statusCode === 500 ? true : false;
-        res.setEncoding('utf8');
         var data = '';
+
+        res.setEncoding('utf8');
+
         res.on('data', function (chunk) {
           data += chunk;
         });
+
         res.on('end', function () {
           phantom.POSTING = false;
 
@@ -460,7 +483,7 @@ exports.create = function (options, callback) {
       req.setHeader('Content-Type', 'application/json');
 
       var json = JSON.stringify({ page: page, method: method, args: args });
-      // console.log('Sending: ', json);
+
       req.setHeader('Content-Length', Buffer.byteLength(json));
       req.write(json);
       req.end();
@@ -468,27 +491,35 @@ exports.create = function (options, callback) {
 
     var proxy = {
       process: phantom,
+
       createPage: function (callback) {
         request_queue.push([ [ 0, 'createPage' ], callbackOrDummy(callback, poll_func) ]);
       },
+
       injectJs: function (filename, callback) {
         request_queue.push([ [ 0, 'injectJs', filename ], callbackOrDummy(callback, poll_func) ]);
       },
+
       addCookie: function (cookie, callback) {
         request_queue.push([ [ 0, 'addCookie', cookie ], callbackOrDummy(callback, poll_func) ]);
       },
+
       clearCookies: function (callback) {
         request_queue.push([ [ 0, 'clearCookies' ], callbackOrDummy(callback, poll_func) ]);
       },
+
       deleteCookie: function (cookie, callback) {
         request_queue.push([ [ 0, 'deleteCookie', cookie ], callbackOrDummy(callback, poll_func) ]);
       },
+
       set : function (property, value, callback) {
         request_queue.push([ [ 0, 'setProperty', property, value ], callbackOrDummy(callback, poll_func) ]);
       },
+
       get : function (property, callback) {
         request_queue.push([ [ 0, 'getProperty', property ], callbackOrDummy(callback, poll_func) ]);
       },
+
       exit: function (callback) {
         phantom.kill('SIGTERM');
 
@@ -496,6 +527,7 @@ exports.create = function (options, callback) {
         // We should send `exit` command to process.
         request_queue.push([ [ 0, 'exit', 0 ], callbackOrDummy(callback) ]);
       },
+
       on: function () {
         phantom.on.apply(phantom, arguments);
       }
@@ -506,8 +538,6 @@ exports.create = function (options, callback) {
 };
 
 function setup_long_poll (phantom, port, pages, setup_new_page) {
-  // console.log('Setting up long poll');
-
   var http_opts = {
     hostname: 'localhost',
     port: port,
@@ -529,7 +559,6 @@ function setup_long_poll (phantom, port, pages, setup_new_page) {
       return;
     }
 
-    // console.log('Polling...');
     var req = http.get(http_opts, function(res) {
       res.setEncoding('utf8');
       var data = '';
@@ -538,7 +567,7 @@ function setup_long_poll (phantom, port, pages, setup_new_page) {
       });
       res.on('end', function () {
         var results;
-        // console.log('Poll results: ' + data);
+
         if (dead) {
           cb(new HeadlessError('Phantom Process died'));
           return;
@@ -553,21 +582,21 @@ function setup_long_poll (phantom, port, pages, setup_new_page) {
             + '\nData from phantom was: ' + data));
           return;
         }
-        // if (results.length > 0) {
-        //     console.log('Long poll results: ', results);
-        // }
-        // else {
-        //     console.log('Zero callbacks');
-        // }
+
         results.forEach(function (r) {
+          var new_page, callbackFunc, cb;
+
           if (r.page_id) {
             if (pages[r.page_id] && r.callback === 'onPageCreated') {
-              var new_page = setup_new_page(r.args[0]);
+              new_page = setup_new_page(r.args[0]);
+
               if (pages[r.page_id].onPageCreated) {
                 pages[r.page_id].onPageCreated(new_page);
               }
+
             } else if (pages[r.page_id] && pages[r.page_id][r.callback]) {
-              var callbackFunc = pages[r.page_id][r.callback];
+              callbackFunc = pages[r.page_id][r.callback];
+
               if (callbackFunc.length > 1) {
                 // We use `apply` if the function is expecting multiple args
                 callbackFunc.apply(pages[r.page_id], wrapArray(r.args));
@@ -577,15 +606,18 @@ function setup_long_poll (phantom, port, pages, setup_new_page) {
               }
             }
           } else {
-            var cb = callbackOrDummy(phantom[r.callback]);
+            cb = callbackOrDummy(phantom[r.callback]);
             cb.apply(phantom, r.args);
           }
         });
+
         cb();
       });
     });
+
     req.on('error', function (err) {
       if (dead || phantom.killed) { return; }
+
       console.warn('Poll Request error: ' + err);
     });
   };

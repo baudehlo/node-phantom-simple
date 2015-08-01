@@ -11,12 +11,14 @@ var callback_stack = [];
 
 phantom.onError = function (msg, trace) {
   var msgStack = [ 'PHANTOM ERROR: ' + msg ];
+
   if (trace && trace.length) {
     msgStack.push('TRACE:');
     trace.forEach(function(t) {
       msgStack.push(' -> ' + (t.file || t.sourceURL) + ': ' + t.line + (t.function ? ' (in function ' + t.function + ')' : ''));
     });
   }
+
   system.stderr.writeLine(msgStack.join('\n'));
   phantom.exit(1);
 };
@@ -53,7 +55,6 @@ function page_open (res, page, args) {
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');
     res.write(JSON.stringify({ data: success }));
-    // console.log('Close1');
     res.close();
   }));
 }
@@ -62,12 +63,10 @@ function include_js (res, page, args) {
   res.statusCode = 200;
   res.setHeader('Content-Type', 'application/json');
   res.write(JSON.stringify({ data: 'success' }));
-  // console.log('Calling includeJs');
+
   page.includeJs.apply(page, args.concat(function () {
-    // console.log('Came back...');
     try {
       res.write('');
-      // console.log('Close2');
       res.close();
     } catch (e) {
       if (!/cannot call function of deleted QObject/.test(e)) { // Ignore this error
@@ -78,14 +77,11 @@ function include_js (res, page, args) {
 }
 
 webserver.listen('127.0.0.1:0', function (req, res) {
-  // console.log('Got a request of type: ' + req.method);
   if (req.method === 'GET') {
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');
-    // console.log('Sending back ' + callback_stack.length + ' callbacks');
     res.write(JSON.stringify({ data: callback_stack }));
     callback_stack = [];
-    // console.log('Close3');
     res.close();
   } else if (req.method === 'POST') {
     var request, error, output;
@@ -104,9 +100,7 @@ webserver.listen('127.0.0.1:0', function (req, res) {
           return include_js(res, pages[request.page], request.args);
         }
         try {
-          // console.log('Calling: page.' + method + '(' + request.args + ')');
           output = pages[request.page][request.method].apply(pages[request.page], request.args);
-          // console.log('Got output: ', output);
         } catch (err) {
           error = err;
         }
@@ -124,11 +118,9 @@ webserver.listen('127.0.0.1:0', function (req, res) {
       res.statusCode = 500;
       res.write(JSON.stringify(error));
     } else {
-      // console.log('Results: ' + output);
       res.statusCode = 200;
       res.write(JSON.stringify({ data: output }));
     }
-    // console.log('Close4')
     res.close();
   } else {
     throw 'Unknown request type!';
@@ -147,13 +139,13 @@ function setup_callbacks (id, page) {
   callbacks.forEach(function (cb) {
     page[cb] = function (parm) {
       var args = Array.prototype.slice.call(arguments);
+
       if ((cb === 'onResourceRequested') && (parm.url.indexOf('data:image') === 0)) {
         return;
       }
-      // console.log('Callback: ' + cb);
+
       if (cb === 'onClosing') { args = []; }
       callback_stack.push({ 'page_id': id, 'callback': cb, 'args': args });
-      // console.log('Callback stack size now: ' + callback_stack.length);
     };
   });
   // Special case this
