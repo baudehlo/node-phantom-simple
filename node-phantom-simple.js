@@ -626,7 +626,7 @@ function setup_long_poll (phantom, port, pages, setup_new_page) {
   };
 
   var repeater = function () {
-    if(!phantom.LONGPOLL){
+    if (!phantom.LONGPOLL) {
       return;
     }
     setTimeout(function () {
