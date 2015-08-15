@@ -386,6 +386,8 @@ exports.create = function (options, callback) {
       return page;
     };
 
+    phantom.LONGPOLL = true;
+
     var poll_func = setup_long_poll(phantom, port, pages, setup_new_page);
 
     var request_queue = queue(function (paramarr, next) {
@@ -521,6 +523,7 @@ exports.create = function (options, callback) {
       },
 
       exit: function (callback) {
+        phantom.LONGPOLL = false;
         phantom.kill('SIGTERM');
 
         // In case of SlimerJS `kill` will close only wrapper of xulrunner.
@@ -623,6 +626,9 @@ function setup_long_poll (phantom, port, pages, setup_new_page) {
   };
 
   var repeater = function () {
+    if (!phantom.LONGPOLL) {
+      return;
+    }
     setTimeout(function () {
       poll_func(repeater);
     }, POLL_INTERVAL);
