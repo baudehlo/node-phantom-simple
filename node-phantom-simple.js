@@ -623,6 +623,11 @@ function setup_long_poll (phantom, port, pages, setup_new_page) {
   };
 
   var repeater = function () {
+    // If phantom already killed - stop repeat timer
+    if (phantom.killed) {
+      return;
+    }
+
     setTimeout(function () {
       poll_func(repeater);
     }, POLL_INTERVAL);
