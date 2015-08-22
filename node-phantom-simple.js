@@ -624,7 +624,7 @@ function setup_long_poll (phantom, port, pages, setup_new_page) {
 
   var repeater = function () {
     // If phantom already killed - stop repeat timer
-    if (phantom.killed) {
+    if (dead || phantom.killed) {
       return;
     }
 
