@@ -187,7 +187,8 @@ Engines are buggy. Here are some cases you should know.
     - undefined -> null
     - null -> '' (empty string)
     - [ 1, undefined, 2 ] -> null
-
+- `page.onConfirm()` handler can not return value due async driver nature.
+  Use `.setFn()` instead: `page.setFn('onConfirm', function () { return true; })`.
 
 License
 -------
