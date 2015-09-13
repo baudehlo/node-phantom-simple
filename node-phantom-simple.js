@@ -10,7 +10,7 @@ var spawn           = require('child_process').spawn;
 var exec            = require('child_process').exec;
 var util            = require('util');
 var path            = require('path');
-var Emitter         = require('events');
+var Emitter         = require('events').EventEmitter;
 
 var POLL_INTERVAL   = process.env.POLL_INTERVAL || 500;
 
