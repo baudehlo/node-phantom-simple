@@ -116,20 +116,12 @@ exports.create = function (options, callback) {
       } catch (__) {
         //
       }
-      process.exit(1);
-    };
-
-    var uncaughtHandler = function (err) {
-      console.error(err.stack);
-      closeChild();
     };
 
     // Note it's possible to blow up maxEventListeners doing this - consider moving to a single handler.
     [ 'SIGINT', 'SIGTERM' ].forEach(function(sig) {
       process.on(sig, closeChild);
     });
-
-    process.on('uncaughtException', uncaughtHandler);
 
     phantom.once('error', function (err) {
       callback(err);
@@ -149,7 +141,6 @@ exports.create = function (options, callback) {
         process.removeListener(sig, closeChild);
       });
 
-      process.removeListener('uncaughtException', uncaughtHandler);
       exitCode = code;
     });
 
