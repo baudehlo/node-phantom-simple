@@ -1,3 +1,13 @@
+2.0.5 / 2015-09-17
+------------------
+
+- Removed uncaught exception handler and forced exit (that should be in parent
+  application)
+- Added process events proxy to avoid memleak warnings on parallel browser
+  instances run.
+- Added `onConfirm` details to known issues.
+
+
 2.0.4 / 2015-08-22
 ------------------
 
