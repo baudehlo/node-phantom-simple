@@ -21,13 +21,6 @@ var processProxy    = new Emitter();
 
 processProxy.setMaxListeners(0);
 
-[ 'SIGINT', 'SIGTERM' ].forEach(function(sig) {
-  process.on(sig, function () {
-    processProxy.emit(sig);
-  });
-});
-
-
 var queue = function (worker) {
   var _q = [];
   var running = false;
