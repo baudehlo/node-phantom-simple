@@ -174,6 +174,9 @@ function setup_page (page) {
 }
 
 var global_methods = {
+  setProxy: function (ip, port, proxyType, user, password) {
+    return phantom.setProxy(ip, port, proxyType, user, password);
+  },
   createPage: function () {
     var page  = webpage.create();
     var id = setup_page(page);
