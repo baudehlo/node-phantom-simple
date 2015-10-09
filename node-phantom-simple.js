@@ -501,8 +501,8 @@ exports.create = function (options, callback) {
     var proxy = {
       process: phantom,
 
-      setProxy: function (host, port, method, v4, v5, callback) {
-        request_queue.push([ [ 0, 'setProxy', host, port, method, v4, v5 ], callbackOrDummy(callback, poll_func) ]);
+      setProxy: function (host, port, proxyType, user, password, callback) {
+        request_queue.push([ [ 0, 'setProxy', host, port, proxyType, user, password ], callbackOrDummy(callback, poll_func) ]);
       },
 
       createPage: function (callback) {
