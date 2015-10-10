@@ -23,7 +23,7 @@ describe('page', function () {
 
   it('render to binary & base64', function (done) {
     driver.create(
-        { ignoreErrorPattern: /CoreText performance note/, path: require(process.env.ENGINE || 'phantomjs').path },
+      { ignoreErrorPattern: /CoreText performance note/, path: require(process.env.ENGINE || 'phantomjs').path },
         function (err, browser) {
           if (err) {
             done(err);
