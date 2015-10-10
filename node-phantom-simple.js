@@ -509,8 +509,8 @@ exports.create = function (options, callback) {
         request_queue.push([ [ 0, 'createPage' ], callbackOrDummy(callback, poll_func) ]);
       },
 
-      callback:function(fn){
-        return 'phantom.callback('+fn.toString()+')';
+      callback: function (fn) {
+        return 'phantom.callback(' + fn.toString() + ')';
       },
 
       injectJs: function (filename, callback) {
@@ -597,7 +597,7 @@ function setup_long_poll (phantom, port, pages, setup_new_page) {
           console.warn('Error parsing JSON from phantom: ' + err);
           console.warn('Data from phantom was: ' + data);
           cb(new HeadlessError('Error parsing JSON from phantom: ' + err
-            + '\nData from phantom was: ' + data));
+              + '\nData from phantom was: ' + data));
           return;
         }
 
