@@ -8,6 +8,28 @@ var pages  = {};
 var page_id = 1;
 
 var callback_stack = [];
+var hooks = {
+  'paperSize':{
+    set:function(key, value) {
+
+      try {
+        if (value && value.header && value.header.contents) {
+          value.header.contents = eval('(' + value.header.contents + ')');
+        }
+        if (value && value.footer && value.footer.contents) {
+          value.footer.contents = eval('(' + value.footer.contents + ')');
+        }
+        return value;
+      } catch(err) {
+        return value;
+      }
+    },
+    get:function(key, value) {
+      return value;
+    }
+  }
+};
+
 
 phantom.onError = function (msg, trace) {
   var msgStack = [ 'PHANTOM ERROR: ' + msg ];
@@ -38,14 +60,36 @@ function lookup(obj, key, value) {
 
   if (arguments.length > 2) {
     if (key.length === 1) {
-      obj[key[0]] = value;
-      return obj[key[0]];
+      try {
+        if (hooks[key] && hooks[key].set) {
+          value = hooks[key].set(key, value);
+        }
+        obj[key[0]] = value;
+
+        var retVal1 = obj[key[0]];
+        if (hooks[key] && hooks[key].get) {
+          retVal1 = hooks[key].get(key, retVal1);
+        }
+        return retVal1;
+      } catch(err) {
+        obj[key[0]] = value;
+        return obj[key[0]];
+
+      }
     }
     return lookup(obj[key[0]], key.slice(1), value);
   }
 
   if (key.length === 1) {
-    return obj[key[0]];
+    var retVal2 = obj[key[0]];
+    try {
+      if (hooks[key] && hooks[key].get) {
+        retVal2 = hooks[key].get(key, retVal2);
+      }
+    } catch(err) {
+      // ignore
+    }
+    return retVal2;
   }
   return lookup(obj[key[0]], key.slice(1));
 }
