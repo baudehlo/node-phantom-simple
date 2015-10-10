@@ -24,54 +24,54 @@ describe('page', function () {
   it('render to binary & base64', function (done) {
     driver.create(
       { ignoreErrorPattern: /CoreText performance note/, path: require(process.env.ENGINE || 'phantomjs').path },
-        function (err, browser) {
+      function (err, browser) {
+        if (err) {
+          done(err);
+          return;
+        }
+
+        browser.createPage(function (err, page) {
           if (err) {
             done(err);
             return;
           }
 
-          browser.createPage(function (err, page) {
+          page.open('http://localhost:' + server.address().port, function (err, status) {
             if (err) {
               done(err);
               return;
             }
 
-            page.open('http://localhost:' + server.address().port, function (err, status) {
+            assert.equal(status, 'success');
+
+            page.render(testFileName, function (err) {
               if (err) {
                 done(err);
                 return;
               }
 
-              assert.equal(status, 'success');
+              var stat = fs.statSync(testFileName);
 
-              page.render(testFileName, function (err) {
+              // Relaxed check to work in any browser/OS
+              // We should have image and this image should be > 0 bytes.
+              assert.ok(stat.size > 100, 'generated image too small');
+
+
+              page.renderBase64('png', function (err, imagedata) {
                 if (err) {
                   done(err);
                   return;
                 }
 
-                var stat = fs.statSync(testFileName);
+                // Base64 decoded image should be the same (check size only)
+                assert.equal((new Buffer(imagedata, 'base64')).length, stat.size);
 
-                // Relaxed check to work in any browser/OS
-                // We should have image and this image should be > 0 bytes.
-                assert.ok(stat.size > 100, 'generated image too small');
-
-
-                page.renderBase64('png', function (err, imagedata) {
-                  if (err) {
-                    done(err);
-                    return;
-                  }
-
-                  // Base64 decoded image should be the same (check size only)
-                  assert.equal((new Buffer(imagedata, 'base64')).length, stat.size);
-
-                  browser.exit(done);
-                });
+                browser.exit(done);
               });
             });
           });
-        }
+        });
+      }
     );
   });
 
