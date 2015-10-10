@@ -79,6 +79,7 @@ describe('page', function () {
     driver.create(
         { ignoreErrorPattern: /CoreText performance note/, path: require(process.env.ENGINE || 'phantomjs').path },
         function (err, browser) {
+
           var phantom = browser;
           if (err) {
             done(err);
@@ -105,52 +106,62 @@ describe('page', function () {
                   return;
                 }
 
-                var statWithoutHeaderFooter = fs.statSync(testPDF);
+                try {
+                  var statWithoutHeaderFooter = fs.statSync(testPDF);
 
-                // Relaxed check to work in any browser/OS
-                // We should have image and this image should be > 0 bytes.
-                assert.ok(statWithoutHeaderFooter.size > 1000, 'generated pdf too small');
+                  // Relaxed check to work in any browser/OS
+                  // We should have image and this image should be > 0 bytes.
+                  assert.ok(statWithoutHeaderFooter.size > 1000, 'generated pdf too small');
 
 
-                var paperSize = {
-                  format: 'A4',
-                  margin: '1cm',
-                  header: {
-                    height: '2cm',
-                    contents: phantom.callback(function(pageNum, numPages) {
-                      return '<h1>Header ' + pageNum + ' / ' + numPages + '</h1>';
-                    })
-                  },
-                  footer: {
-                    height: '2cm',
-                    contents: phantom.callback(function(pageNum, numPages) {
-                      return '<h1>Footer ' + pageNum + ' / ' + numPages + '</h1>';
-                    })
-                  }
-                };
-
-                page.set('paperSize', paperSize, function() {
-                  page.render(testPDF, {
-                    format: 'pdf',
-                    quality: '100'
-                  }, function (err) {
-                    if (err) {
-                      done(err);
-                      return;
+                  var paperSize = {
+                    format: 'A4',
+                    margin: '1cm',
+                    header: {
+                      height: '2cm',
+                      contents: phantom.callback(function (pageNum, numPages) {
+                        return '<h1>Header ' + pageNum + ' / ' + numPages + '</h1>';
+                      })
+                    },
+                    footer: {
+                      height: '2cm',
+                      contents: phantom.callback(function (pageNum, numPages) {
+                        return '<h1>Footer ' + pageNum + ' / ' + numPages + '</h1>';
+                      })
                     }
+                  };
 
-                    var statWithHeaderFooter = fs.statSync(testPDF);
+                  page.set('paperSize', paperSize, function () {
+                    page.render(testPDF, {
+                      format: 'pdf',
+                      quality: '100'
+                    }, function (err) {
+                      if (err) {
+                        done(err);
+                        return;
+                      }
+
+                      var statWithHeaderFooter = fs.statSync(testPDF);
 
 
-                    // Relaxed check to work in any browser/OS
-                    // We should have image and this image should be > 0 bytes.
-                    assert.ok(statWithHeaderFooter.size > 2000, 'generated pdf (header/footer) too small');
+                      // Relaxed check to work in any browser/OS
+                      // We should have image and this image should be > 0 bytes.
+                      assert.ok(statWithHeaderFooter.size > 2000, 'generated pdf (header/footer) too small');
 
-                    assert.ok(statWithHeaderFooter.size > statWithoutHeaderFooter.size, 'generated pdf with header & footer can not be smaller than generated pdf without header & footer');
-                    browser.exit(done);
+                      assert.ok(statWithHeaderFooter.size > statWithoutHeaderFooter.size, 'generated pdf with header & footer can not be smaller than generated pdf without header & footer');
+                      browser.exit(done);
+                    });
+
                   });
+                } catch(error) {
 
-                });
+                  // Since no PDF File was generated this is most possibly the slimerjs browser which doesn't yet support pdf rendering
+                  assert.equal(error.code, 'ENOENT');
+                  assert.equal(error.path, testPDF);
+
+
+                  browser.exit(done);
+                }
 
               });
             });
