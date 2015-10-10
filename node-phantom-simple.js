@@ -509,6 +509,10 @@ exports.create = function (options, callback) {
         request_queue.push([ [ 0, 'createPage' ], callbackOrDummy(callback, poll_func) ]);
       },
 
+      callback:function(fn){
+        return 'phantom.callback('+fn.toString()+')';
+      },
+
       injectJs: function (filename, callback) {
         request_queue.push([ [ 0, 'injectJs', filename ], callbackOrDummy(callback, poll_func) ]);
       },

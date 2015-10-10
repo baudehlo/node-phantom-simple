@@ -8,6 +8,29 @@ var pages  = {};
 var page_id = 1;
 
 var callback_stack = [];
+var hooks = {
+  'paperSize':{
+    preprocessor:function(key,value){
+
+      try {
+        if(value && value.header && value.header.contents){
+          value.header.contents = eval('('+value.header.contents+')');
+        }
+        if(value && value.footer && value.footer.contents){
+          value.footer.contents = eval('('+value.footer.contents+')');
+        }
+        return value;
+      }
+      catch(err){
+        return value;
+      }
+    },
+    postprocessor:function(key,value) {
+      return value;
+    }
+  }
+}
+
 
 phantom.onError = function (msg, trace) {
   var msgStack = [ 'PHANTOM ERROR: ' + msg ];
@@ -38,8 +61,22 @@ function lookup(obj, key, value) {
 
   if (arguments.length > 2) {
     if (key.length === 1) {
-      obj[key[0]] = value;
-      return obj[key[0]];
+      try {
+        if (hooks[key] && hooks[key].preprocessor) {
+          value = hooks[key].preprocessor(key, value);
+        }
+        obj[key[0]] = value;
+
+        if (hooks[key] && hooks[key].postprocessor) {
+          return hooks[key].postprocessor(key, obj[key[0]])
+        }
+        return obj[key[0]];
+      }
+      catch(err){
+        obj[key[0]] = value;
+        return obj[key[0]];
+
+      }
     }
     return lookup(obj[key[0]], key.slice(1), value);
   }
