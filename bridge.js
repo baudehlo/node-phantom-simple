@@ -9,6 +9,13 @@ var page_id = 1;
 
 var callback_stack = [];
 
+// Define the maximum intervals (ms) while we accept not to have any contact with the master process.
+// If it is reached, we consider that it has died and kill ourselves. See `masterIsAlive()`.
+// We accept a different value for the initial timeout to let things settleand every actor to get up
+// to speed.
+var MASTER_ALIVE_TIMEOUT = 2000;
+var MASTER_ALIVE_TIMEOUT_INIT = 5000;
+
 phantom.onError = function (msg, trace) {
   var msgStack = [ 'PHANTOM ERROR: ' + msg ];
 
@@ -77,6 +84,9 @@ function include_js (res, page, args) {
 }
 
 webserver.listen('127.0.0.1:0', function (req, res) {
+  // We got a request, that means the master process is still alive
+  masterIsAlive();
+
   if (req.method === 'GET') {
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');
@@ -121,6 +131,12 @@ webserver.listen('127.0.0.1:0', function (req, res) {
       res.statusCode = 200;
       res.write(JSON.stringify({ data: output }));
     }
+    res.close();
+  } else if (req.method === 'HEAD') {
+    // We use HEAD requests as a PING mechanism to detect if the master process is gone.
+    // This is a no-op, just return a 200, the only effect is that masterIsAlive() was
+    // called above
+    res.statusCode = 200;
     res.close();
   } else {
     throw 'Unknown request type!';
@@ -188,6 +204,7 @@ var global_methods = {
   },
 
   exit: function (code) {
+    masterIsAlive(-1); // Disable master alive checks
     return phantom.exit(code);
   },
 
@@ -213,5 +230,27 @@ var global_methods = {
   }
 };
 
+// If this function is called, that means the master process is gone
+// and we should commit suicide
+function onMasterGoneAway () {
+  console.error('node-phantom-simple:worker' + system.pid, 'Master process seems to be gone. Suiciding.');
+
+  phantom.exit(2);
+}
+
+var _masterAliveTimeout = null;
+function masterIsAlive (timeout) {
+  if (_masterAliveTimeout) {
+    clearTimeout(_masterAliveTimeout);
+  }
+
+  if (!timeout || timeout > 0) {
+    _masterAliveTimeout = setTimeout(onMasterGoneAway, timeout || MASTER_ALIVE_TIMEOUT);
+  }
+}
+
 /*eslint-disable no-console*/
 console.log('Ready [' + system.pid + '] [' + webserver.port + ']');
+
+// Wait for news from the master process
+masterIsAlive(MASTER_ALIVE_TIMEOUT_INIT);

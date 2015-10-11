@@ -14,17 +14,23 @@ var Emitter         = require('events').EventEmitter;
 
 var POLL_INTERVAL   = process.env.POLL_INTERVAL || 500;
 
+var runningBrowsers = [];
 
-// Setup events proxy to avoid warnings "possible memory leak"
-//
-var processProxy    = new Emitter();
+process.on('beforeExit', function () {
+  if (!runningBrowsers.length) return;
 
-processProxy.setMaxListeners(0);
+  console.warn('node-phantom-simple: Killing browser processes still running');
 
-[ 'SIGINT', 'SIGTERM' ].forEach(function(sig) {
-  process.on(sig, function () {
-    processProxy.emit(sig);
+  runningBrowsers.forEach(function (browser, idx) {
+    browser.kill();
+    runningBrowsers.splice(idx, 1);
   });
+});
+
+process.on('exit', function () {
+  if (!runningBrowsers.length) return;
+
+  console.warn('node-phantom-simple: Main process exited whith browser(s) still running.');
 });
 
 
@@ -127,19 +133,8 @@ exports.create = function (options, callback) {
 
     var phantom = spawn(options.path, args);
 
-    // Ensure that the child process is closed when this process dies
-    var closeChild = function () {
-      try {
-        phantom.kill();
-      } catch (__) {
-        //
-      }
-    };
-
-    // Note it's possible to blow up maxEventListeners doing this - consider moving to a single handler.
-    [ 'SIGINT', 'SIGTERM' ].forEach(function(sig) {
-      processProxy.on(sig, closeChild);
-    });
+    // Add to the list of running instances
+    runningBrowsers.push(phantom);
 
     phantom.once('error', function (err) {
       callback(err);
@@ -155,9 +150,11 @@ exports.create = function (options, callback) {
     var exitCode = 0;
 
     phantom.once('exit', function (code) {
-      [ 'SIGINT', 'SIGTERM' ].forEach(function(sig) {
-        processProxy.removeListener(sig, closeChild);
-      });
+      // Remove from running browser list
+      var idx = runningBrowsers.indexOf(phantom);
+      if (idx > -1) {
+        runningBrowsers.splice(idx, 1);
+      }
 
       exitCode = code;
     });
