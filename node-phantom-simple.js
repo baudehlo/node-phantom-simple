@@ -10,14 +10,13 @@ var spawn           = require('child_process').spawn;
 var exec            = require('child_process').exec;
 var util            = require('util');
 var path            = require('path');
-var Emitter         = require('events').EventEmitter;
 
 var POLL_INTERVAL   = process.env.POLL_INTERVAL || 500;
 
 var runningBrowsers = [];
 
 process.on('beforeExit', function () {
-  if (!runningBrowsers.length) return;
+  if (!runningBrowsers.length) { return };
 
   console.warn('node-phantom-simple: Killing browser processes still running');
 
@@ -28,7 +27,7 @@ process.on('beforeExit', function () {
 });
 
 process.on('exit', function () {
-  if (!runningBrowsers.length) return;
+  if (!runningBrowsers.length) { return };
 
   console.warn('node-phantom-simple: Main process exited whith browser(s) still running.');
 });

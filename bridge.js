@@ -233,8 +233,6 @@ var global_methods = {
 // If this function is called, that means the master process is gone
 // and we should commit suicide
 function onMasterGoneAway () {
-  console.error('node-phantom-simple:worker' + system.pid, 'Master process seems to be gone. Suiciding.');
-
   phantom.exit(2);
 }
 
