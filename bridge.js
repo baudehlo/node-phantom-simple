@@ -37,11 +37,9 @@ function lookup(obj, key, value) {
   }
 
   if (arguments.length > 2) {
-    if (key.length === 1) {
-      obj[key[0]] = value;
-      return obj[key[0]];
-    }
-    return lookup(obj[key[0]], key.slice(1), value);
+    obj[key[0]] = key.length === 1 ? value : lookup(obj[key[0]] || {}, key.slice(1), value);
+
+    return obj;
   }
 
   if (key.length === 1) {
