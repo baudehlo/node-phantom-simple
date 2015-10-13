@@ -304,8 +304,13 @@ exports.create = function (options, callback) {
       ];
 
       var page = {
-        setFn: function (name, fn, cb) {
-          request_queue.push([ [ id, 'setFunction', name, fn.toString() ], callbackOrDummy(cb, poll_func) ]);
+        setFn: function (name, fn, wrap, cb) {
+          if (typeof wrap === 'function' && cb === undefined) {
+            wrap = false;
+            cb = wrap;
+          }
+
+          request_queue.push([ [ id, 'setFunction', name, fn.toString(), !!wrap ], callbackOrDummy(cb, poll_func) ]);
         },
 
         get: function (name, cb) {
