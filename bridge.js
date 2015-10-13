@@ -1,5 +1,6 @@
-/*global phantom*/
-/*eslint-disable strict*/
+/* global phantom, require */
+/* eslint-disable strict */
+/* eslint-disable no-multi-spaces */
 var webpage     = require('webpage');
 var webserver   = require('webserver').create();
 var system      = require('system');
@@ -8,6 +9,7 @@ var pages  = {};
 var page_id = 1;
 
 var callback_stack = [];
+
 
 phantom.onError = function (msg, trace) {
   var msgStack = [ 'PHANTOM ERROR: ' + msg ];
@@ -37,11 +39,9 @@ function lookup(obj, key, value) {
   }
 
   if (arguments.length > 2) {
-    if (key.length === 1) {
-      obj[key[0]] = value;
-      return obj[key[0]];
-    }
-    return lookup(obj[key[0]], key.slice(1), value);
+    obj[key[0]] = key.length === 1 ? value : lookup(obj[key[0]] || {}, key.slice(1), value);
+
+    return obj;
   }
 
   if (key.length === 1) {
@@ -164,8 +164,16 @@ function setup_page (page) {
     lookup(page, prop, val);
     return true;
   };
-  page.setFunction = function (name, fn) {
-    page[name] = eval('(' + fn + ')');
+  page.setFunction = function (name, fn, wrap) {
+    /*eslint-disable no-eval*/
+    fn = eval('(' + fn + ')');
+
+    if (wrap === true) {
+      fn = phantom.callback(fn);
+    }
+
+    lookup(page, name, fn);
+
     return true;
   };
   pages[id] = page;
