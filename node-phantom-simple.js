@@ -1,4 +1,4 @@
-/* global document, console, require, process, exports, setTimeout, Buffer, __dirname */
+/* global console, require, process, exports, setTimeout, Buffer, __dirname */
 /* eslint-disable no-console */
 /* eslint-disable no-multi-spaces */
 
@@ -305,7 +305,7 @@ exports.create = function (options, callback) {
 
       var page = {
         setFn: function (name, fn, wrap, cb) {
-          if (typeof wrap === 'function' && cb === undefined) {
+          if (typeof wrap === 'function' && !cb) {
             wrap = false;
             cb = wrap;
           }
@@ -366,6 +366,7 @@ exports.create = function (options, callback) {
             }
 
             /*eslint-disable handle-callback-err*/
+            /*global document*/
             page.evaluate(function (selector) {
               return document.querySelectorAll(selector).length;
             }, selector, function (err, result) {
