@@ -1,5 +1,6 @@
-/*global document*/
-/*eslint-disable no-console*/
+/* global document, console, require, process, exports, setTimeout, Buffer, __dirname */
+/* eslint-disable no-console */
+/* eslint-disable no-multi-spaces */
 
 'use strict';
 
