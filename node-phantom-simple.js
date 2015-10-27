@@ -10,22 +10,8 @@ var spawn           = require('child_process').spawn;
 var exec            = require('child_process').exec;
 var util            = require('util');
 var path            = require('path');
-var Emitter         = require('events').EventEmitter;
 
 var POLL_INTERVAL   = process.env.POLL_INTERVAL || 500;
-
-
-// Setup events proxy to avoid warnings "possible memory leak"
-//
-var processProxy    = new Emitter();
-
-processProxy.setMaxListeners(0);
-
-[ 'SIGINT', 'SIGTERM' ].forEach(function(sig) {
-  process.on(sig, function () {
-    processProxy.emit(sig);
-  });
-});
 
 
 var queue = function (worker) {
@@ -127,20 +113,6 @@ exports.create = function (options, callback) {
 
     var phantom = spawn(options.path, args);
 
-    // Ensure that the child process is closed when this process dies
-    var closeChild = function () {
-      try {
-        phantom.kill();
-      } catch (__) {
-        //
-      }
-    };
-
-    // Note it's possible to blow up maxEventListeners doing this - consider moving to a single handler.
-    [ 'SIGINT', 'SIGTERM' ].forEach(function(sig) {
-      processProxy.on(sig, closeChild);
-    });
-
     phantom.once('error', function (err) {
       callback(err);
     });
@@ -153,14 +125,6 @@ exports.create = function (options, callback) {
     });
 
     var exitCode = 0;
-
-    phantom.once('exit', function (code) {
-      [ 'SIGINT', 'SIGTERM' ].forEach(function(sig) {
-        processProxy.removeListener(sig, closeChild);
-      });
-
-      exitCode = code;
-    });
 
     // Wait for 'Ready' line
     phantom.stdout.once('data', function (data) {

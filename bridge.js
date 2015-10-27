@@ -9,6 +9,9 @@ var page_id = 1;
 
 var callback_stack = [];
 
+// Max interval without requests from master process
+var WATCHDOG_TIMEOUT = 30000;
+
 phantom.onError = function (msg, trace) {
   var msgStack = [ 'PHANTOM ERROR: ' + msg ];
 
@@ -22,6 +25,17 @@ phantom.onError = function (msg, trace) {
   system.stderr.writeLine(msgStack.join('\n'));
   phantom.exit(1);
 };
+
+var watchdog_timer_id = null;
+
+// Kill phantom if parent disconnected
+function watchdog_clear() {
+  clearTimeout(watchdog_timer_id);
+
+  watchdog_timer_id = setTimeout(function () {
+    phantom.exit(0);
+  }, WATCHDOG_TIMEOUT);
+}
 
 function lookup(obj, key, value) {
   // key can be either string or an array of strings
@@ -77,6 +91,9 @@ function include_js (res, page, args) {
 }
 
 webserver.listen('127.0.0.1:0', function (req, res) {
+  // Update watchdog timer on every request
+  watchdog_clear();
+
   if (req.method === 'GET') {
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');
@@ -212,6 +229,9 @@ var global_methods = {
     return true;
   }
 };
+
+// Start watchdog timer
+watchdog_clear();
 
 /*eslint-disable no-console*/
 console.log('Ready [' + system.pid + '] [' + webserver.port + ']');
