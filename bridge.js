@@ -53,9 +53,10 @@ function lookup(obj, key, value) {
   if (arguments.length > 2) {
     if (key.length === 1) {
       obj[key[0]] = value;
-      return obj[key[0]];
+    } else {
+      obj[key[0]] = lookup(typeof obj[key[0]] === 'object' ? obj[key[0]] : {}, key.slice(1), value);
     }
-    return lookup(obj[key[0]], key.slice(1), value);
+    return obj;
   }
 
   if (key.length === 1) {

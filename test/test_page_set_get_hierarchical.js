@@ -33,7 +33,31 @@ describe('page', function () {
 
             assert.equal(ua, 'node-phantom tester');
 
-            browser.exit(done);
+            page.get('viewportSize.width', function (err, oldValue) {
+              if (err) {
+                done(err);
+                return;
+              }
+
+              page.set('viewportSize.width', 3000, function (err) {
+                if (err) {
+                  done(err);
+                  return;
+                }
+
+                page.get('viewportSize.width', function (err, newValue) {
+                  if (err) {
+                    done(err);
+                    return;
+                  }
+
+                  assert.notEqual(oldValue, newValue);
+                  assert.equal(newValue, 3000);
+
+                  browser.exit(done);
+                });
+              });
+            });
           });
         });
       });
