@@ -1,3 +1,11 @@
+2.1.0 / 2015-10-28
+------------------
+
+- Replaced SIGINT/SIGTERM handlers with watchdog, #81.
+- Improved nested page props support, #90.
+- Added support for `page.header.contents` & `page.footer.contents`, #78.
+
+
 2.0.6 / 2015-10-09
 ------------------
 
