@@ -8,11 +8,18 @@ var fs   = require('fs');
 // Generate path in os tmp dir
 function tmp() {
   return path.join(
-    require('os').tmpdir(),
-    require('crypto').randomBytes(8).toString('hex') + '.png'
+      require('os').tmpdir(),
+      require('crypto').randomBytes(8).toString('hex') + '.png'
   );
 }
 
+// Generate path in os tmp dir
+function pdf() {
+  return path.join(
+      require('os').tmpdir(),
+      require('crypto').randomBytes(8).toString('hex') + '.pdf'
+  );
+}
 
 // Copy file to tmp dir & return new name
 function toTmp(filePath) {
@@ -33,5 +40,6 @@ function unlink(filePath) {
 
 
 exports.tmp     = tmp;
+exports.pdf     = pdf;
 exports.toTmp   = toTmp;
 exports.unlink  = unlink;
