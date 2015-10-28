@@ -69,6 +69,22 @@ function wrapArray(arr) {
   return (arr instanceof Array) ? arr : [ arr ];
 }
 
+function clone(obj) {
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+
+  var copy = {};
+
+  for (var attr in obj) {
+    if (obj.hasOwnProperty(attr)) {
+      copy[attr] = clone(obj[attr]);
+    }
+  }
+
+  return copy;
+}
+
 
 var pageEvaluateDeprecatedFn = util.deprecate(function () {}, "Deprecated 'page.evaluate(fn, callback, args...)' syntax - use 'page.evaluate(fn, args..., callback)' instead");
 var createDeprecatedFn = util.deprecate(function () {}, "Deprecated '.create(callback, options)' syntax - use '.create(options, callback)' instead");
@@ -276,6 +292,30 @@ exports.create = function (options, callback) {
         },
 
         set: function (name, val, cb) {
+          // Special case for `paperSize.header.contents` property.
+          // Property should be wrapped by `phantom.callback` in bridge.
+          if (name === 'paperSize.header.contents' && val) {
+            val = String(val);
+          } else if (name === 'paperSize.header' && val.contents) {
+            val = clone(val);
+            val.contents = String(val.contents);
+          } else if (name === 'paperSize' && val.header && val.header.contents) {
+            val = clone(val);
+            val.header.contents = String(val.header.contents);
+          }
+
+          // Special case for `paperSize.footer.contents` property.
+          // Property should be wrapped by `phantom.callback` in bridge.
+          if (name === 'paperSize.footer.contents' && val) {
+            val = String(val);
+          } else if (name === 'paperSize.footer' && val.contents) {
+            val = clone(val);
+            val.contents = String(val.contents);
+          } else if (name === 'paperSize' && val.footer && val.footer.contents) {
+            val = clone(val);
+            val.footer.contents = String(val.footer.contents);
+          }
+
           request_queue.push([ [ id, 'setProperty', name, val ], callbackOrDummy(cb, poll_func) ]);
         },
 

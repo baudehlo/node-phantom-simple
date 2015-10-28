@@ -179,6 +179,24 @@ function setup_page (page) {
     return lookup(page, prop);
   };
   page.setProperty = function (prop, val) {
+    // Special case for `paperSize.header.contents` property.
+    if (prop === 'paperSize.header.contents' && val) {
+      val = phantom.callback(eval('(' + val + ')'));
+    } else if (prop === 'paperSize.header' && val.contents) {
+      val.contents = phantom.callback(eval('(' + val.contents + ')'));
+    } else if (prop === 'paperSize' && val.header && val.header.contents) {
+      val.header.contents = phantom.callback(eval('(' + val.header.contents + ')'));
+    }
+
+    // Special case for `paperSize.footer.contents` property.
+    if (prop === 'paperSize.footer.contents' && val) {
+      val = phantom.callback(eval('(' + val + ')'));
+    } else if (prop === 'paperSize.footer' && val.contents) {
+      val.contents = phantom.callback(eval('(' + val.contents + ')'));
+    } else if (prop === 'paperSize' && val.footer && val.footer.contents) {
+      val.footer.contents = phantom.callback(eval('(' + val.footer.contents + ')'));
+    }
+
     lookup(page, prop, val);
     return true;
   };
