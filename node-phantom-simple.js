@@ -182,9 +182,13 @@ exports.create = function (options, callback) {
           // Modern distros usually have `iproute2` instead of `net-tools`.
           // Try `ss` first, then fallback to `netstat`.
           //
-          // Note, `grep "[,=]%d,"` contains variation,
-          // because `ss` output differs between versions.
-          cmd = 'if which ss > /dev/null; then ss -nlp | grep "[,=]%d,"; else netstat -nlp | grep "[[:space:]]%d/"; fi';
+          // Note:
+          //
+          // - `grep "[,=]%d,"` contains variation, because `ss` output differs
+          //    between versions.
+          // - `ss` can exist but fail in some env (#76).
+          //
+          cmd = 'ss -nlp | grep "[,=]%d," || netstat -nlp | grep "[[:space:]]%d/"';
           break;
 
         case 'darwin':

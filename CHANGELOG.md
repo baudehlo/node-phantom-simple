@@ -1,3 +1,9 @@
+2.1.1 / 2015-11-07
+------------------
+
+- Improved port detection support for DO droplets, #76, thanks to @svvac.
+
+
 2.1.0 / 2015-10-28
 ------------------
 
