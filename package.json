@@ -6,6 +6,11 @@
   "license": "MIT",
   "repository": "baudehlo/node-phantom-simple",
   "main": "node-phantom-simple.js",
+  "files": [
+    "bridge.js",
+    "headless_error.js",
+    "node-phantom-simple.js"
+  ],
   "scripts": {
     "lint": "./node_modules/.bin/eslint --reset .",
     "test": "npm run test-phantom && npm run test-slimer",
