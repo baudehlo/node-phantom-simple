@@ -1,5 +1,4 @@
 /*global document*/
-/*eslint-disable no-console*/
 
 'use strict';
 
@@ -10,9 +9,15 @@ var spawn           = require('child_process').spawn;
 var exec            = require('child_process').exec;
 var util            = require('util');
 var path            = require('path');
+var debug           = require('debug');
 
 var POLL_INTERVAL   = process.env.POLL_INTERVAL || 500;
 
+var logger = {
+  debug: debug('node-phantom-simple:debug'),
+  warn: debug('node-phantom-simple:warn'),
+  error: debug('node-phantom-simple:error')
+};
 
 var queue = function (worker) {
   var _q = [];
@@ -137,7 +142,7 @@ exports.create = function (options, callback) {
       if (options.ignoreErrorPattern && options.ignoreErrorPattern.exec(data)) {
         return;
       }
-      console.warn('phantom stderr: ' + data);
+      logger.error('' + data);
     });
 
     var exitCode = 0;
@@ -146,7 +151,7 @@ exports.create = function (options, callback) {
     phantom.stdout.once('data', function (data) {
       // setup normal listener now
       phantom.stdout.on('data', function (data) {
-        console.log('phantom stdout: ' + data);
+        logger.debug('' + data);
       });
 
       var matches = data.toString().match(/Ready \[(\d+)\] \[(.+?)\]/);
@@ -493,7 +498,7 @@ exports.create = function (options, callback) {
           return;
         }
 
-        console.warn('Request() error evaluating ' + method + '() call: ' + err);
+        logger.warn('Request() error evaluating ' + method + '() call: ' + err);
         callback(new HeadlessError('Request() error evaluating ' + method + '() call: ' + err));
       });
 
@@ -598,8 +603,8 @@ function setup_long_poll (phantom, port, pages, setup_new_page) {
         try {
           results = JSON.parse(data).data;
         } catch (err) {
-          console.warn('Error parsing JSON from phantom: ' + err);
-          console.warn('Data from phantom was: ' + data);
+          logger.warn('Error parsing JSON from phantom: ' + err);
+          logger.warn('Data from phantom was: ' + data);
           cb(new HeadlessError('Error parsing JSON from phantom: ' + err
             + '\nData from phantom was: ' + data));
           return;
@@ -640,7 +645,7 @@ function setup_long_poll (phantom, port, pages, setup_new_page) {
     req.on('error', function (err) {
       if (dead || phantom.killed) { return; }
 
-      console.warn('Poll Request error: ' + err);
+      logger.warn('Poll Request error: ' + err);
     });
   };
 
