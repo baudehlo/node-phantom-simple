@@ -18,5 +18,8 @@
     "mocha": "^2.2.5",
     "phantomjs": "^1.9.17",
     "slimerjs": "^0.9.5"
+  },
+  "dependencies": {
+    "debug": "^2.2.0"
   }
 }
