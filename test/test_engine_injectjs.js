@@ -31,4 +31,25 @@ describe('engine', function () {
       });
     });
   });
+
+  it('should return false on non-existent file', function (done) {
+    driver.create({ path: require(process.env.ENGINE || 'phantomjs').path }, function (err, browser) {
+      if (err) {
+        done(err);
+        return;
+      }
+
+      var filePath = '/not/existent';
+
+      browser.injectJs(filePath, function (err, result) {
+
+        if (err) {
+          done(err);
+          return;
+        }
+        assert.equal(result, false);
+        browser.exit(done);
+      });
+    });
+  });
 });
