@@ -645,6 +645,12 @@ function setup_long_poll (phantom, port, pages, setup_new_page) {
     req.on('error', function (err) {
       if (dead || phantom.killed) { return; }
 
+      if (err.code === 'ECONNRESET') {
+        dead = true;
+        cb(new HeadlessError('Phantom Process died'));
+        return;
+      }
+
       logger.warn('Poll Request error: ' + err);
     });
   };
