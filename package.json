@@ -21,8 +21,8 @@
     "eslint": "0.24.1",
     "eslint-plugin-nodeca": "^1.0.0",
     "mocha": "^2.2.5",
-    "phantomjs": "^1.9.17",
-    "slimerjs": "^0.9.5"
+    "phantomjs": "^1.9.19",
+    "slimerjs": "~0.9.6"
   },
   "dependencies": {
     "debug": "^2.2.0"
