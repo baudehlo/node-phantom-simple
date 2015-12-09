@@ -1,3 +1,9 @@
+2.2.1 / 2015-12-09
+------------------
+
+- Improved phantom die detection (connection loss), #100, thanks to @joscha.
+
+
 2.2.0 / 2015-11-28
 ------------------
 
