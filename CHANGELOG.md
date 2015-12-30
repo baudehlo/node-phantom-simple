@@ -1,3 +1,9 @@
+2.2.2 / 2015-12-30
+------------------
+
+- One more improvement of phantom exit check, #102, thanks to @siboulet.
+
+
 2.2.1 / 2015-12-09
 ------------------
 
