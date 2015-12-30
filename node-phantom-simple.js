@@ -145,7 +145,11 @@ exports.create = function (options, callback) {
       logger.error('' + data);
     });
 
-    var exitCode = 0;
+    var immediateExit = function(exitCode) {
+      return callback(new HeadlessError('Phantom immediately exited with: ' + exitCode));
+    };
+
+    phantom.once('exit', immediateExit);
 
     // Wait for 'Ready' line
     phantom.stdout.once('data', function (data) {
@@ -161,6 +165,8 @@ exports.create = function (options, callback) {
         callback(new HeadlessError('Unexpected output from PhantomJS: ' + data));
         return;
       }
+
+      phantom.removeListener('exit', immediateExit);
 
       var phantom_port = matches[2].indexOf(':') === -1 ? matches[2] : matches[2].split(':')[1];
 
@@ -264,12 +270,6 @@ exports.create = function (options, callback) {
         });
       });
     });
-
-    setTimeout(function () { // wait a bit to see if the spawning of phantomjs immediately fails due to bad path or similar
-      if (exitCode !== 0) {
-        return callback(new HeadlessError('Phantom immediately exited with: ' + exitCode));
-      }
-    }, 100);
   }
 
   spawnPhantom(function (err, phantom, port) {
