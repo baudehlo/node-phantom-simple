@@ -126,9 +126,13 @@ exports.create = function (options, callback) {
   function spawnPhantom (callback) {
     var args = [];
 
-    Object.keys(options.parameters).forEach(function (parm) {
-      args.push('--' + parm + '=' + options.parameters[parm]);
-    });
+    if (Array.isArray(options.parameters)) {
+      args = options.parameters;
+    } else {
+      Object.keys(options.parameters).forEach(function (parm) {
+        args.push('--' + parm + '=' + options.parameters[parm]);
+      });
+    }
 
     args = args.concat([ path.join(__dirname, 'bridge.js') ]);
 
