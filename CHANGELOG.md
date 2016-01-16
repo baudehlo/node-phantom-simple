@@ -1,3 +1,9 @@
+2.2.3 / 2016-01-17
+------------------
+
+- Allow engine options to be an array to pass in verbatim keys and values.
+
+
 2.2.2 / 2015-12-30
 ------------------
 
