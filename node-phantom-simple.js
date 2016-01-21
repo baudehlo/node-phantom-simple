@@ -240,7 +240,7 @@ exports.create = function (options, callback) {
           stdout = '';
         }
 
-        var re = /(?:127\.0\.0\.1|localhost):(\d+)/ig, match;
+        var re = /(?:127\.\d{1,3}\.\d{1,3}\.\d{1,3}|localhost):(\d+)/ig, match;
         var ports = [];
 
         while ((match = re.exec(stdout)) !== null) {
