@@ -288,7 +288,7 @@ exports.create = function (options, callback) {
       var methods = [
         'addCookie', 'childFramesCount', 'childFramesName', 'clearCookies', 'close',
         'currentFrameName', 'deleteCookie', 'evaluateJavaScript',
-        'evaluateAsync', 'getPage', 'go', 'goBack', 'goForward', 'includeJs',
+        'evaluateAsync', 'go', 'goBack', 'goForward', 'includeJs',
         'injectJs', 'open', 'openUrl', 'release', 'reload', 'render', 'renderBase64',
         'sendEvent', 'setContent', 'stop', 'switchToFocusedFrame', 'switchToFrame',
         'switchToFrame', 'switchToChildFrame', 'switchToChildFrame', 'switchToMainFrame',
@@ -346,6 +346,31 @@ exports.create = function (options, callback) {
           }
 
           request_queue.push([ [ id, 'evaluate', fn.toString() ].concat(extra_args), callbackOrDummy(cb, poll_func) ]);
+        },
+
+        getPage: function(name, cb) {
+          if (typeof cb !== 'function') {
+            cb = function() {};
+          }
+
+          // Create a wrapper function that setups
+          // new page if phantom finds a page,
+          // otherwise send null
+          var wrapperFn = function(err, page_id) {
+            if (err) {
+              return cb(err, null);
+            }
+
+            if (!page_id && page_id !== 0) {
+              return cb(null, null);
+            }
+
+            var new_page = setup_new_page(page_id);
+
+            cb(null, new_page);
+          };
+
+          request_queue.push([ [ id, 'getPage', name ], callbackOrDummy(wrapperFn, poll_func) ]);
         },
 
         waitForSelector: function (selector, timeout, cb) {

@@ -74,6 +74,33 @@ function page_open (res, page, args) {
   }));
 }
 
+function page_get_page(res, page, args) {
+  var new_page;
+  var error;
+  var id = null;
+
+  try {
+    new_page = page.getPage.apply(page, args);
+  } catch (err) {
+    error = err;
+  }
+
+  if (new_page) {
+    id = setup_page(new_page);
+  }
+
+  res.setHeader('Content-Type', 'application/json');
+  if (error) {
+    res.statusCode = 500;
+    res.write(JSON.stringify(error));
+  } else {
+    res.statusCode = 200;
+    res.write(JSON.stringify({ data: id }));
+  }
+
+  res.close();
+}
+
 function include_js (res, page, args) {
   res.statusCode = 200;
   res.setHeader('Content-Type', 'application/json');
@@ -116,6 +143,8 @@ webserver.listen('127.0.0.1:0', function (req, res) {
           return page_open(res, pages[request.page], request.args);
         } else if (request.method === 'includeJs') {
           return include_js(res, pages[request.page], request.args);
+        } else if (request.method === 'getPage') { // special case due to retrieving page
+          return page_get_page(res, pages[request.page], request.args);
         }
         try {
           output = pages[request.page][request.method].apply(pages[request.page], request.args);
