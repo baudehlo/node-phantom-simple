@@ -124,6 +124,7 @@ exports.create = function (options, callback) {
   if (typeof options.parameters === 'undefined') { options.parameters = {}; }
 
   function spawnPhantom (callback) {
+    var bridgeDefaults = { host: '127.0.0.1', port: '0' };
     var args = [];
 
     if (Array.isArray(options.parameters)) {
@@ -135,6 +136,9 @@ exports.create = function (options, callback) {
     }
 
     args = args.concat([ path.join(__dirname, 'bridge.js') ]);
+
+    var bridgeOptions = Object.assign(bridgeDefaults, options.bridge || {});
+    args = args.concat([ bridgeOptions.host, bridgeOptions.port ]);
 
     var phantom = spawn(options.path, args);
 
