@@ -3,6 +3,8 @@
 var webpage     = require('webpage');
 var webserver   = require('webserver').create();
 var system      = require('system');
+var host        = system.args[1];
+var port        = system.args[2];
 
 var pages  = {};
 var page_id = 1;
@@ -91,7 +93,7 @@ function include_js (res, page, args) {
   }));
 }
 
-webserver.listen('127.0.0.1:0', function (req, res) {
+webserver.listen(host + ':' + port, function (req, res) {
   // Update watchdog timer on every request
   watchdog_clear();
 
