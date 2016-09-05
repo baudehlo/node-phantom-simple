@@ -136,7 +136,29 @@ exports.create = function (options, callback) {
 
     args = args.concat([ path.join(__dirname, 'bridge.js') ]);
 
-    var phantom = spawn(options.path, args);
+    var phantom;
+    // if platform is win32 and the path contains space, using some hacks for the spawn method
+  	if (process.platform == 'win32' && options.path.indexOf(' ') >= 0) {
+  		var args = [
+  			"/S",
+  			"/C",
+  			'"',
+  			options.path,
+  		].concat('bridge.js').concat('"');
+  
+  		var command = process.env.comspec || "cmd.exe";
+  
+  		phantom = spawn(
+  			command,
+  			args,
+  			{
+  				windowsVerbatimArguments: true,
+  				cwd: __dirname
+  			}
+  		);
+  	} else {
+  		phantom = spawn(options.path, args);
+  	}
 
     phantom.once('error', function (err) {
       callback(err);
