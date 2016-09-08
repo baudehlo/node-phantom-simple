@@ -12,15 +12,14 @@
     "node-phantom-simple.js"
   ],
   "scripts": {
-    "lint": "./node_modules/.bin/eslint --reset .",
+    "lint": "./node_modules/.bin/eslint .",
     "test": "npm run test-phantom && npm run test-slimer",
     "test-phantom": "npm run lint && ./node_modules/.bin/mocha",
     "test-slimer": "ENGINE=slimerjs ./node_modules/.bin/mocha"
   },
   "devDependencies": {
-    "eslint": "0.24.1",
-    "eslint-plugin-nodeca": "^1.0.0",
-    "mocha": "^2.2.5",
+    "eslint": "^3.4.0",
+    "mocha": "^3.0.2",
     "phantomjs": "^1.9.19"
   },
   "dependencies": {

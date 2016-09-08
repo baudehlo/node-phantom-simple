@@ -1,2 +1,2 @@
-/*eslint-disable no-console*/
+/*eslint-disable no-console, strict*/
 console.log('injected');

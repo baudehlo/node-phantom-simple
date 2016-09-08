@@ -17,7 +17,7 @@ phantom.onError = function (msg, trace) {
 
   if (trace && trace.length) {
     msgStack.push('TRACE:');
-    trace.forEach(function(t) {
+    trace.forEach(function (t) {
       msgStack.push(' -> ' + (t.file || t.sourceURL) + ': ' + t.line + (t.function ? ' (in function ' + t.function + ')' : ''));
     });
   }
@@ -39,33 +39,25 @@ function watchdog_clear() {
 
 function lookup(obj, key, value) {
   // key can be either string or an array of strings
-  if (!(typeof obj === 'object')) {
-    return null;
-  }
-  if (typeof key === 'string') {
-    key = key.split('.');
-  }
+  if (!(typeof obj === 'object')) return null;
 
-  if (!Array.isArray(key)) {
-    return null;
-  }
+  if (typeof key === 'string') key = key.split('.');
+
+  if (!Array.isArray(key)) return null;
 
   if (arguments.length > 2) {
-    if (key.length === 1) {
-      obj[key[0]] = value;
-    } else {
-      obj[key[0]] = lookup(typeof obj[key[0]] === 'object' ? obj[key[0]] : {}, key.slice(1), value);
-    }
+    if (key.length === 1) obj[key[0]] = value;
+    else obj[key[0]] = lookup(typeof obj[key[0]] === 'object' ? obj[key[0]] : {}, key.slice(1), value);
+
     return obj;
   }
 
-  if (key.length === 1) {
-    return obj[key[0]];
-  }
+  if (key.length === 1) return obj[key[0]];
+
   return lookup(obj[key[0]], key.slice(1));
 }
 
-function page_open (res, page, args) {
+function page_open(res, page, args) {
   page.open.apply(page, args.concat(function (success) {
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');
@@ -74,7 +66,7 @@ function page_open (res, page, args) {
   }));
 }
 
-function include_js (res, page, args) {
+function include_js(res, page, args) {
   res.statusCode = 200;
   res.setHeader('Content-Type', 'application/json');
   res.write(JSON.stringify({ data: 'success' }));
@@ -113,9 +105,11 @@ webserver.listen('127.0.0.1:0', function (req, res) {
     if (!error) {
       if (request.page) {
         if (request.method === 'open') { // special case this as it's the only one with a callback
-          return page_open(res, pages[request.page], request.args);
+          page_open(res, pages[request.page], request.args);
+          return;
         } else if (request.method === 'includeJs') {
-          return include_js(res, pages[request.page], request.args);
+          include_js(res, pages[request.page], request.args);
+          return;
         }
         try {
           output = pages[request.page][request.method].apply(pages[request.page], request.args);
@@ -153,7 +147,7 @@ var callbacks = [
   'onAuthPrompt'
 ];
 
-function setup_callbacks (id, page) {
+function setup_callbacks(id, page) {
   callbacks.forEach(function (cb) {
     page[cb] = function (parm) {
       var args = Array.prototype.slice.call(arguments);
@@ -163,17 +157,17 @@ function setup_callbacks (id, page) {
       }
 
       if (cb === 'onClosing') { args = []; }
-      callback_stack.push({ 'page_id': id, 'callback': cb, 'args': args });
+      callback_stack.push({ page_id: id, callback: cb, args: args });
     };
   });
   // Special case this
   page.onPageCreated = function (page) {
     var new_id = setup_page(page);
-    callback_stack.push({ 'page_id': id, 'callback': 'onPageCreated', 'args': [ new_id ] });
+    callback_stack.push({ page_id: id, callback: 'onPageCreated', args: [ new_id ] });
   };
 }
 
-function setup_page (page) {
+function setup_page(page) {
   var id    = page_id++;
   page.getProperty = function (prop) {
     return lookup(page, prop);
