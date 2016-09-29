@@ -147,7 +147,7 @@ var callbacks = [
   'onAuthPrompt'
 ];
 
-function setup_callbacks(id, page) {
+function setup_callbacks(id, page, initCfg) {
   callbacks.forEach(function (cb) {
     page[cb] = function (parm) {
       var args = Array.prototype.slice.call(arguments);
@@ -165,9 +165,16 @@ function setup_callbacks(id, page) {
     var new_id = setup_page(page);
     callback_stack.push({ page_id: id, callback: 'onPageCreated', args: [ new_id ] });
   };
+
+  if (initCfg && initCfg.onInitialized){
+    page.onInitialized = function (){
+      // eslint-disable-next-line no-new-func
+      (Function('return ' + initCfg.onInitialized)())(page);
+    };
+  }
 }
 
-function setup_page(page) {
+function setup_page(page, initCfg) {
   var id    = page_id++;
   page.getProperty = function (prop) {
     return lookup(page, prop);
@@ -199,7 +206,7 @@ function setup_page(page) {
     return true;
   };
   pages[id] = page;
-  setup_callbacks(id, page);
+  setup_callbacks(id, page, initCfg);
   return id;
 }
 
@@ -207,9 +214,9 @@ var global_methods = {
   setProxy: function (ip, port, proxyType, user, password) {
     return phantom.setProxy(ip, port, proxyType, user, password);
   },
-  createPage: function () {
+  createPage: function (initCfg) {
     var page  = webpage.create();
-    var id = setup_page(page);
+    var id = setup_page(page, initCfg);
     return { page_id: id };
   },
 
