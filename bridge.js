@@ -169,7 +169,7 @@ function setup_callbacks(id, page, initCfg) {
   if (initCfg && initCfg.onInitialized){
     page.onInitialized = function (){
       // eslint-disable-next-line no-new-func
-      (Function('return ' + initCfg.onInitialized)())(page);
+      (Function('return ' + initCfg.onInitialized)())(page,initCfg.onInitializedArgs);
     };
   }
 }
