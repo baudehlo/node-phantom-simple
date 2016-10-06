@@ -121,8 +121,8 @@ exports.create = function (options, callback) {
     options.path = 'phantomjs';
   }
 
-  if(!options.bridgePath) {
-    options.bridgePath = path.join(__dirname, 'bridge.js')
+  if (!options.bridgePath) {
+    options.bridgePath = path.join(__dirname, 'bridge.js');
   }
 
   if (typeof options.parameters === 'undefined') { options.parameters = {}; }
