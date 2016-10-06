@@ -121,6 +121,10 @@ exports.create = function (options, callback) {
     options.path = 'phantomjs';
   }
 
+  if(!options.bridgePath) {
+    options.bridgePath = path.join(__dirname, 'bridge.js')
+  }
+
   if (typeof options.parameters === 'undefined') { options.parameters = {}; }
 
   function spawnPhantom(callback) {
@@ -134,7 +138,7 @@ exports.create = function (options, callback) {
       });
     }
 
-    args = args.concat([ path.join(__dirname, 'bridge.js') ]);
+    args = args.concat([ options.bridgePath ]);
 
     var phantom = spawn(options.path, args);
 
