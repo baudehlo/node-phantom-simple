@@ -42,7 +42,7 @@ var queue = function (worker) {
   return q;
 };
 
-function callbackOrDummy (callback, poll_func) {
+function callbackOrDummy(callback, poll_func) {
   if (!callback) { return function () {}; }
 
   if (poll_func) {
@@ -65,7 +65,7 @@ function callbackOrDummy (callback, poll_func) {
   return callback;
 }
 
-function unwrapArray (arr) {
+function unwrapArray(arr) {
   return arr && arr.length === 1 ? arr[0] : arr;
 }
 
@@ -123,7 +123,7 @@ exports.create = function (options, callback) {
 
   if (typeof options.parameters === 'undefined') { options.parameters = {}; }
 
-  function spawnPhantom (callback) {
+  function spawnPhantom(callback) {
     var args = [];
 
     if (Array.isArray(options.parameters)) {
@@ -149,7 +149,7 @@ exports.create = function (options, callback) {
       logger.error('' + data);
     });
 
-    var immediateExit = function(exitCode) {
+    var immediateExit = function (exitCode) {
       return callback(new HeadlessError('Phantom immediately exited with: ' + exitCode));
     };
 
@@ -593,7 +593,7 @@ exports.create = function (options, callback) {
 };
 
 
-function setup_long_poll (phantom, port, pages, setup_new_page) {
+function setup_long_poll(phantom, port, pages, setup_new_page) {
   var http_opts = {
     hostname: 'localhost',
     port: port,
@@ -615,7 +615,7 @@ function setup_long_poll (phantom, port, pages, setup_new_page) {
       return;
     }
 
-    var req = http.get(http_opts, function(res) {
+    var req = http.get(http_opts, function (res) {
       res.setEncoding('utf8');
       var data = '';
       res.on('data', function (chunk) {

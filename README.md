@@ -58,6 +58,19 @@ before_script:
 ```
 
 
+Development
+-----------
+
+You should manualy install `slimerjs` to run `npm test`:
+
+```bash
+npm install slimerjs
+```
+
+It's excluded from devDeps, because slimerjs binary download is banned on
+Tvavice-CI network by authors.
+
+
 Usage
 -----
 
