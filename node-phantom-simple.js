@@ -348,21 +348,23 @@ exports.create = function (options, callback) {
           request_queue.push([ [ id, 'evaluate', fn.toString() ].concat(extra_args), callbackOrDummy(cb, poll_func) ]);
         },
 
-        getPage: function(name, cb) {
+        getPage: function (name, cb) {
           if (typeof cb !== 'function') {
-            cb = function() {};
+            cb = function () {};
           }
 
           // Create a wrapper function that setups
           // new page if phantom finds a page,
           // otherwise send null
-          var wrapperFn = function(err, page_id) {
+          var wrapperFn = function (err, page_id) {
             if (err) {
-              return cb(err, null);
+              cb(err, null);
+              return;
             }
 
             if (!page_id && page_id !== 0) {
-              return cb(null, null);
+              cb(null, null);
+              return;
             }
 
             var new_page = setup_new_page(page_id);
