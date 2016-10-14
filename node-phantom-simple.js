@@ -162,7 +162,7 @@ exports.create = function (options, callback) {
         logger.debug('' + data);
       });
 
-      var matches = data.toString().match(/Ready \[(\d+)\] \[(.+?)\]/);
+      var matches = data.toString().match(/Ready \[(\d+)\] \[(.*?)\]/);
 
       if (!matches) {
         phantom.kill();
@@ -172,7 +172,7 @@ exports.create = function (options, callback) {
 
       phantom.removeListener('exit', immediateExit);
 
-      var phantom_port = matches[2].indexOf(':') === -1 ? matches[2] : matches[2].split(':')[1];
+      var phantom_port = !matches[2] || matches[2].indexOf(':') === -1 ? (matches[2] || '0') : matches[2].split(':')[1];
 
       phantom_port = parseInt(phantom_port, 0);
 
