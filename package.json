@@ -20,7 +20,8 @@
   "devDependencies": {
     "eslint": "^3.4.0",
     "mocha": "^3.0.2",
-    "phantomjs": "^1.9.19"
+    "phantomjs": "^1.9.19",
+    "slimerjs": "^0.906.2"
   },
   "dependencies": {
     "debug": "^2.2.0"

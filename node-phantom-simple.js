@@ -522,8 +522,12 @@ exports.create = function (options, callback) {
         request_queue.push([ [ 0, 'setProxy', ip, port, proxyType, user, password ], callbackOrDummy(callback, poll_func) ]);
       },
 
-      createPage: function (callback) {
-        request_queue.push([ [ 0, 'createPage' ], callbackOrDummy(callback, poll_func) ]);
+      createPage: function (callback, initCfg) {
+        if (initCfg && initCfg.onInitialized){
+          initCfg.onInitialized = initCfg.onInitialized.toString();
+        }
+
+        request_queue.push([ [ 0, 'createPage', initCfg ], callbackOrDummy(callback, poll_func) ]);
       },
 
       injectJs: function (filename, callback) {
