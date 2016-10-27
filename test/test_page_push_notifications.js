@@ -209,7 +209,7 @@ describe('push notifications', function () {
           return;
         }
 
-        page.onLoadFinished = function () {
+        page.onLoadFinished = function (status) {
           browser.exit(done);
         };
 
@@ -219,7 +219,7 @@ describe('push notifications', function () {
             return;
           }
 
-          assert.equal(status, 'success');
+          assert.strictEqual(status, 'success');
         });
       });
     });
