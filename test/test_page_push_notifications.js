@@ -219,7 +219,7 @@ describe('push notifications', function () {
             return;
           }
 
-          assert.equal(status, 'success');
+          assert.strictEqual(status, 'success');
         });
       });
     });
