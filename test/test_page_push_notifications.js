@@ -209,7 +209,7 @@ describe('push notifications', function () {
           return;
         }
 
-        page.onLoadFinished = function (status) {
+        page.onLoadFinished = function () {
           browser.exit(done);
         };
 
