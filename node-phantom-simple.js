@@ -203,7 +203,7 @@ exports.create = function (options, callback) {
           //    between versions.
           // - `ss` can exist but fail in some env (#76).
           //
-          cmd = 'ss -nlp | grep "[,=]%d," || netstat -nlp | grep "[[:space:]]%d/"';
+          cmd = 'netstat -nlp | grep "[[:space:]]%d/"';
           break;
 
         case 'darwin':
